@@ -15,7 +15,6 @@ export default function Login() {
     const { login, loading, error, clearError, isAuthenticated, user, requiresBranchSelection } = useAuthStore();
     const [form, setForm] = useState({ email: '', password: '' });
 
-    // Redirect if already authenticated
     useEffect(() => {
         if (isAuthenticated && user && !requiresBranchSelection) {
             const roles = user.roles || [];
@@ -42,43 +41,45 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900">
-            {/* Glow background effect */}
+        <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4">
+            {/* Background effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500" />
+                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-72 md:w-96 h-72 md:h-96 bg-orange-500/5 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl" />
             </div>
 
-            <div className="relative w-full max-w-md mx-4">
+            <div className="relative w-full max-w-sm">
                 {/* Logo / Brand */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-2xl shadow-lg shadow-orange-500/30 mb-4">
-                        <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-center mb-6 md:mb-8">
+                    <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl shadow-xl shadow-orange-500/20 mb-4">
+                        <svg className="w-7 h-7 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6M17 13l1.5 6M9 19h6" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">TaquerPOS</h1>
-                    <p className="text-gray-400 text-sm mt-1">Sistema POS para Restaurantes</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">TaquerPOS</h1>
+                    <p className="text-gray-500 text-xs md:text-sm mt-1 font-medium">Sistema POS para Restaurantes</p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-gray-800/60 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl p-8">
-                    <h2 className="text-xl font-semibold text-white mb-6">Iniciar Sesión</h2>
+                <div className="bg-gray-900/40 backdrop-blur-xl border border-gray-800/50 rounded-2xl shadow-2xl p-6 md:p-8">
+                    <h2 className="text-lg font-black text-white mb-5 tracking-tight">Iniciar Sesión</h2>
 
                     {/* Error message */}
                     {error && (
-                        <div className="mb-4 flex items-start gap-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl p-3">
+                        <div className="mb-4 flex items-start gap-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl p-3">
                             <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                             </svg>
-                            {error}
+                            <span className="font-medium">{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Email */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">
                                 Correo electrónico
                             </label>
                             <input
@@ -88,16 +89,16 @@ export default function Login() {
                                 value={form.email}
                                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                                 placeholder="admin@restaurante.com"
-                                className="w-full bg-gray-900/60 border border-gray-600/60 text-white placeholder-gray-500
-                           rounded-xl px-4 py-2.5 text-sm
-                           focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40
-                           transition-colors duration-150"
+                                className="w-full bg-gray-950/60 border border-gray-800/50 text-white placeholder-gray-600
+                                    rounded-xl px-4 py-3 text-sm font-medium
+                                    focus:outline-none focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/10
+                                    transition-all"
                             />
                         </div>
 
                         {/* Password */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">
                                 Contraseña
                             </label>
                             <input
@@ -107,10 +108,10 @@ export default function Login() {
                                 value={form.password}
                                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                                 placeholder="••••••••"
-                                className="w-full bg-gray-900/60 border border-gray-600/60 text-white placeholder-gray-500
-                           rounded-xl px-4 py-2.5 text-sm
-                           focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/40
-                           transition-colors duration-150"
+                                className="w-full bg-gray-950/60 border border-gray-800/50 text-white placeholder-gray-600
+                                    rounded-xl px-4 py-3 text-sm font-medium
+                                    focus:outline-none focus:border-orange-500/40 focus:ring-2 focus:ring-orange-500/10
+                                    transition-all"
                             />
                         </div>
 
@@ -118,10 +119,10 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-500/50
-                         text-white font-semibold rounded-xl py-2.5 text-sm
-                         transition-all duration-150 shadow-lg shadow-orange-500/25
-                         disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700
+                                disabled:opacity-50 text-white font-black rounded-xl py-3.5 text-sm uppercase tracking-wider
+                                transition-all shadow-lg shadow-orange-500/20
+                                disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98]"
                         >
                             {loading ? (
                                 <>
@@ -138,7 +139,7 @@ export default function Login() {
                     </form>
                 </div>
 
-                <p className="text-center text-gray-600 text-xs mt-6">
+                <p className="text-center text-gray-700 text-[10px] mt-5 font-medium">
                     TaquerPOS © {new Date().getFullYear()} · Todos los derechos reservados
                 </p>
             </div>

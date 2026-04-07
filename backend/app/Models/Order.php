@@ -18,9 +18,9 @@ class Order extends Model
     const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
-        'restaurant_id', 'table_id', 'user_id',
+        'restaurant_id', 'table_id', 'user_id', 'customer_id',
         'order_number', 'status', 'type',
-        'customer_name', 'notes',
+        'customer_name', 'delivery_address', 'notes',
         'subtotal', 'tax', 'discount', 'total',
         'confirmed_at', 'ready_at', 'paid_at',
     ];
@@ -55,7 +55,10 @@ class Order extends Model
     public function recalculate(): void
     {
         $subtotal = $this->items()->sum('subtotal');
-        $tax      = round($subtotal * 0.16, 2); // IVA 16%
+        // Use restaurant's configured tax_rate (default 0 = no IVA)
+        $this->loadMissing('restaurant');
+        $taxRate  = (float) ($this->restaurant->tax_rate ?? 0);
+        $tax      = $taxRate > 0 ? round($subtotal * $taxRate, 2) : 0;
         $this->update([
             'subtotal' => $subtotal,
             'tax'      => $tax,
@@ -79,5 +82,11 @@ class Order extends Model
         }
 
         return '#001';
+    }
+
+    // ── Relationships ──────────────────────────────────
+    public function customer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 }

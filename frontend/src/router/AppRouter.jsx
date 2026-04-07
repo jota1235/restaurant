@@ -20,6 +20,9 @@ import RestaurantsPage from '../pages/admin/RestaurantsPage';
 import MenuPage from '../pages/admin/MenuPage';
 import TablesAdmin from '../pages/admin/TablesAdmin';
 import ExtrasAdminPage from '../pages/admin/ExtrasAdminPage';
+import ReportsPage from '../pages/admin/ReportsPage';
+import InventoryPage from '../pages/admin/InventoryPage';
+import CreditsPage from '../pages/admin/CreditsPage';
 // Role Pages
 import TableMap from '../pages/mesero/TableMap';
 import MeseroHome from '../pages/mesero/MeseroHome';
@@ -30,7 +33,6 @@ import CashRegisterControl from '../pages/caja/CashRegisterControl';
 import PaymentHistory from '../pages/caja/PaymentHistory';
 import Unauthorized from '../pages/Unauthorized';
 
-import ComingSoon from '../pages/ComingSoon';
 import NotFound from '../pages/NotFound';
 
 export default function AppRouter() {
@@ -42,7 +44,7 @@ export default function AppRouter() {
                 <Route path="/select-branch" element={<BranchSelector />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
 
-                {/* Admin / Superadmin */}
+                {/* Admin / Superadmin — todas las rutas */}
                 <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin']} />}>
                     <Route element={<AdminLayout />}>
                         <Route path="/admin" element={<AdminDashboard />} />
@@ -51,8 +53,18 @@ export default function AppRouter() {
                         <Route path="/admin/menu" element={<MenuPage />} />
                         <Route path="/admin/extras" element={<ExtrasAdminPage />} />
                         <Route path="/admin/mesas" element={<TablesAdmin />} />
-                        <Route path="/admin/ordenes" element={<ComingSoon />} />
-                        <Route path="/admin/reportes" element={<ComingSoon />} />
+                        <Route path="/admin/inventario" element={<InventoryPage />} />
+                        <Route path="/admin/creditos" element={<CreditsPage />} />
+                        <Route path="/admin/reportes" element={<ReportsPage />} />
+                    </Route>
+                </Route>
+
+                {/* Almacenista — solo puede acceder a /admin/inventario */}
+                <Route element={<ProtectedRoute allowedRoles={['almacenista']} />}>
+                    <Route element={<AdminLayout />}>
+                        <Route path="/admin/inventario" element={<InventoryPage />} />
+                        {/* Cualquier otra ruta de admin → sin permisos */}
+                        <Route path="/admin/*" element={<Unauthorized />} />
                     </Route>
                 </Route>
 
@@ -67,9 +79,6 @@ export default function AppRouter() {
 
                 {/* Cocina */}
                 <Route element={<ProtectedRoute allowedRoles={['cocina', 'admin', 'superadmin']} />}>
-                    <Route element={<AdminLayout />}>  {/* Admin can see kitchen too */}
-                        <Route path="/cocina" element={<CocinaPage />} />
-                    </Route>
                     <Route element={<CocinaLayout />}>
                         <Route path="/cocina" element={<CocinaPage />} />
                     </Route>
@@ -81,6 +90,7 @@ export default function AppRouter() {
                         <Route path="/caja" element={<CajaPage />} />
                         <Route path="/caja/corte" element={<CashRegisterControl />} />
                         <Route path="/caja/historial" element={<PaymentHistory />} />
+                        <Route path="/caja/orden" element={<NewOrderPage />} />
                     </Route>
                 </Route>
 

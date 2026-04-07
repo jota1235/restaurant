@@ -24,9 +24,22 @@ class OrderCreated implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel('restaurant.' . $this->order->restaurant_id),
         ];
+
+        // Also broadcast on each assigned cook's personal channel
+        $cookIds = $this->order->items
+            ->map(fn($item) => $item->product?->category?->assigned_cook_id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        foreach ($cookIds as $cookId) {
+            $channels[] = new PrivateChannel('cook.' . $cookId);
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string
@@ -37,7 +50,7 @@ class OrderCreated implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'order' => new OrderResource($this->order->load(['items.product', 'items.variant', 'items.extras.extra', 'table', 'user'])),
+            'order' => new OrderResource($this->order->load(['items.product.category', 'items.variant', 'items.extras.extra', 'table', 'user'])),
         ];
     }
 }

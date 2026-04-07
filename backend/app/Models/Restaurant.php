@@ -10,21 +10,16 @@ class Restaurant extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'slug',
-        'email',
-        'phone',
-        'address',
-        'city',
-        'state',
-        'country',
-        'is_active',
+        'name', 'slug', 'email', 'phone',
+        'address', 'city', 'state', 'country',
+        'is_active', 'tax_rate', 'logo',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'tax_rate'  => 'decimal:4',
         ];
     }
 

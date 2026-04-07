@@ -16,6 +16,7 @@ class CategoryController extends Controller
         $restaurantId = $request->get('restaurant_id');
 
         $categories = Category::withCount('products')
+            ->with('assignedCook:id,name')
             ->forRestaurant($restaurantId)
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -27,10 +28,11 @@ class CategoryController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'name'        => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'image'       => 'nullable|string',
-            'sort_order'  => 'sometimes|integer|min:0',
+            'name'             => 'required|string|max:100',
+            'description'      => 'nullable|string',
+            'image'            => 'nullable|string',
+            'sort_order'       => 'sometimes|integer|min:0',
+            'assigned_cook_id' => 'nullable|exists:users,id',
         ]);
 
         $restaurantId = $request->get('restaurant_id');
@@ -43,18 +45,19 @@ class CategoryController extends Controller
         }
 
         $category = Category::create([
-            'restaurant_id' => $restaurantId,
-            'name'          => $request->name,
-            'slug'          => $slug,
-            'description'   => $request->description,
-            'image'         => $request->image,
-            'sort_order'    => $request->sort_order ?? 0,
-            'is_active'     => true,
+            'restaurant_id'    => $restaurantId,
+            'name'             => $request->name,
+            'slug'             => $slug,
+            'description'      => $request->description,
+            'image'            => $request->image,
+            'sort_order'       => $request->sort_order ?? 0,
+            'is_active'        => true,
+            'assigned_cook_id' => $request->assigned_cook_id,
         ]);
 
         return response()->json([
             'message' => 'Categoría creada',
-            'data'    => new CategoryResource($category),
+            'data'    => new CategoryResource($category->load('assignedCook')),
         ], 201);
     }
 
@@ -63,17 +66,25 @@ class CategoryController extends Controller
         $this->authorizeTenant($request, $category->restaurant_id);
 
         $request->validate([
-            'name'        => 'sometimes|string|max:100',
-            'description' => 'sometimes|nullable|string',
-            'sort_order'  => 'sometimes|integer|min:0',
-            'is_active'   => 'sometimes|boolean',
+            'name'             => 'sometimes|string|max:100',
+            'description'      => 'sometimes|nullable|string',
+            'sort_order'       => 'sometimes|integer|min:0',
+            'is_active'        => 'sometimes|boolean',
+            'assigned_cook_id' => 'sometimes|nullable|exists:users,id',
         ]);
 
-        $category->update($request->only(['name', 'description', 'sort_order', 'is_active']));
+        $data = $request->only(['name', 'description', 'sort_order', 'is_active']);
+
+        // Allow explicitly unsetting the cook (null = no cook assigned)
+        if ($request->has('assigned_cook_id')) {
+            $data['assigned_cook_id'] = $request->assigned_cook_id;
+        }
+
+        $category->update($data);
 
         return response()->json([
             'message' => 'Categoría actualizada',
-            'data'    => new CategoryResource($category),
+            'data'    => new CategoryResource($category->load('assignedCook')),
         ]);
     }
 
@@ -92,7 +103,12 @@ class CategoryController extends Controller
     private function authorizeTenant(Request $request, int $restaurantId): void
     {
         $user = $request->user();
-        if (!$user->hasRole('superadmin') && $user->restaurant_id !== $restaurantId) {
+        if ($user->hasRole('superadmin')) return;
+
+        // Use the active restaurant_id set by RestaurantScope middleware
+        // (already validated that the user has access to this restaurant)
+        $activeRestaurantId = (int) $request->get('restaurant_id');
+        if ($activeRestaurantId !== $restaurantId) {
             abort(403, 'Sin permisos');
         }
     }

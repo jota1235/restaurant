@@ -19,13 +19,15 @@ class UpdateRestaurantRequest extends FormRequest
         $restaurantId = $this->route('restaurant')->id;
 
         return [
-            'name'    => ['sometimes', 'string', 'max:150'],
-            'email'   => ['sometimes', 'nullable', 'email', Rule::unique('restaurants', 'email')->ignore($restaurantId)],
-            'phone'   => ['sometimes', 'nullable', 'string', 'max:20'],
-            'address' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'city'    => ['sometimes', 'nullable', 'string', 'max:100'],
-            'state'   => ['sometimes', 'nullable', 'string', 'max:100'],
-            'country' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'name'     => ['sometimes', 'string', 'max:150'],
+            'email'    => ['sometimes', 'nullable', 'email', Rule::unique('restaurants', 'email')->ignore($restaurantId)],
+            'phone'    => ['sometimes', 'nullable', 'string', 'max:20'],
+            'address'  => ['sometimes', 'nullable', 'string', 'max:255'],
+            'city'     => ['sometimes', 'nullable', 'string', 'max:100'],
+            'state'    => ['sometimes', 'nullable', 'string', 'max:100'],
+            'country'  => ['sometimes', 'nullable', 'string', 'max:100'],
+            'tax_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:1'],
+            'logo'     => ['sometimes', 'nullable', 'string'], // base64 data URI
         ];
     }
 }

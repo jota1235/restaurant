@@ -84,15 +84,15 @@ export default function UserFormModal({ user, onClose, onSaved }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
             {/* Modal */}
-            <div className="relative bg-gray-800 border border-gray-700/60 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
+            <div className="relative bg-gray-900 border border-gray-800/50 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] flex flex-col sm:mx-4" onClick={e => e.stopPropagation()}>
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-700/50 flex-shrink-0">
-                    <h2 className="text-base font-semibold text-white">
+                <div className="flex items-center justify-between px-5 md:px-6 pt-4 pb-3 border-b border-gray-800/50 flex-shrink-0">
+                    <h2 className="text-base font-black text-white tracking-tight">
                         {editing ? 'Editar usuario' : 'Nuevo usuario'}
                     </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
@@ -103,7 +103,7 @@ export default function UserFormModal({ user, onClose, onSaved }) {
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
+                <form onSubmit={handleSubmit} className="px-5 md:px-6 py-4 space-y-3.5 overflow-y-auto flex-1 min-h-0 scrollbar-none">
                     {errors._global && (
                         <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2">
                             {errors._global}
@@ -176,8 +176,8 @@ export default function UserFormModal({ user, onClose, onSaved }) {
                                     <label
                                         key={r.id}
                                         className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors ${form.restaurant_ids.includes(r.id)
-                                                ? 'bg-orange-500/15 border border-orange-500/30'
-                                                : 'bg-gray-900/40 border border-gray-700/50 hover:bg-gray-900/60'
+                                            ? 'bg-orange-500/15 border border-orange-500/30'
+                                            : 'bg-gray-900/40 border border-gray-700/50 hover:bg-gray-900/60'
                                             }`}
                                     >
                                         <input
@@ -218,13 +218,13 @@ export default function UserFormModal({ user, onClose, onSaved }) {
                     <div className="flex gap-3 pt-2">
                         <button
                             type="button" onClick={onClose}
-                            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-xl py-2.5 transition-colors"
+                            className="flex-1 bg-gray-800 hover:bg-gray-700 text-white text-sm font-bold rounded-xl py-2.5 transition-colors border border-gray-700/50"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit" disabled={loading}
-                            className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-2"
+                            className="flex-1 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 disabled:opacity-60 text-white text-sm font-black rounded-xl py-2.5 transition-all shadow-lg shadow-orange-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
                         >
                             {loading && (
                                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

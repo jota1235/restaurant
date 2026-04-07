@@ -56,14 +56,14 @@ export default function ExtrasAdminPage() {
 
     return (
         <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
                 <div>
-                    <h1 className="text-xl font-bold text-white">Administrar Extras</h1>
-                    <p className="text-gray-400 text-sm">Ingredientes adicionales, toppings o mejoradores</p>
+                    <h1 className="text-lg md:text-xl font-black text-white tracking-tight">Administrar Extras</h1>
+                    <p className="text-gray-500 text-xs">Ingredientes adicionales, toppings o mejoradores</p>
                 </div>
                 <button
                     onClick={() => setModal({ open: true, extra: null })}
-                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-xl"
+                    className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-xs font-black px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-orange-500/20 active:scale-[0.98] uppercase tracking-wider"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -77,9 +77,9 @@ export default function ExtrasAdminPage() {
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 md:gap-4">
                     {extras.map(extra => (
-                        <div key={extra.id} className="bg-gray-800/60 border border-gray-700/50 rounded-2xl p-4 flex flex-col justify-between">
+                        <div key={extra.id} className="bg-gray-900/40 border border-gray-800/50 rounded-2xl p-3 md:p-4 flex flex-col justify-between">
                             <div>
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="text-white font-bold">{extra.name}</h3>
@@ -117,9 +117,9 @@ export default function ExtrasAdminPage() {
 
             {/* Modal */}
             {modal.open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModal({ open: false, extra: null })} />
-                    <form onSubmit={handleSave} className="relative bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setModal({ open: false, extra: null })}>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                    <form onSubmit={handleSave} onClick={e => e.stopPropagation()} className="relative bg-gray-900 border border-gray-800/50 rounded-t-3xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-md shadow-2xl sm:mx-4">
                         <h2 className="text-lg font-bold text-white mb-4">
                             {modal.extra ? 'Editar Extra' : 'Nuevo Extra'}
                         </h2>
@@ -172,7 +172,7 @@ export default function ExtrasAdminPage() {
                             </button>
                             <button
                                 type="submit"
-                                className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 transition-all active:scale-95"
+                                className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black rounded-xl shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98]"
                             >
                                 {modal.extra ? 'Guardar Cambios' : 'Crear Extra'}
                             </button>

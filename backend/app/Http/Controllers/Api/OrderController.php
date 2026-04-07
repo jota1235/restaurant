@@ -22,15 +22,35 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $restaurantId = $request->get('restaurant_id');
+        $authUser     = $request->user();
+        $isCook       = $authUser->hasRole('cocina');
 
-        $query = Order::with(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])
+        $query = Order::with([
+                'table', 'user',
+                'items.product.category',
+                'items.variant',
+                'items.extras.extra',
+            ])
             ->forRestaurant($restaurantId)
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->table_id, fn($q) => $q->where('table_id', $request->table_id))
+            ->when($request->status,       fn($q) => $q->where('status', $request->status))
+            ->when($request->table_id,     fn($q) => $q->where('table_id', $request->table_id))
             ->when(!$request->include_closed, fn($q) => $q->active())
             ->orderByDesc('created_at');
 
         $orders = $request->paginate ? $query->paginate(30) : $query->get();
+
+        // For cooks: filter order items to only the ones belonging to their assigned categories
+        if ($isCook) {
+            $cookId = $authUser->id;
+            $orders = $orders->map(function ($order) use ($cookId) {
+                $order->setRelation('items', $order->items->filter(function ($item) use ($cookId) {
+                    $assignedCookId = $item->product?->category?->assigned_cook_id;
+                    // Only show items whose category is explicitly assigned to THIS cook
+                    return $assignedCookId !== null && $assignedCookId === $cookId;
+                })->values());
+                return $order;
+            })->filter(fn($order) => $order->items->isNotEmpty())->values();
+        }
 
         return response()->json([
             'data' => OrderResource::collection($orders),
@@ -43,10 +63,12 @@ class OrderController extends Controller
         $restaurantId = $request->get('restaurant_id');
 
         $request->validate([
-            'table_id'      => ['nullable', 'exists:tables,id'],
-            'type'          => ['sometimes', Rule::in(['dine_in', 'takeaway', 'delivery'])],
-            'customer_name' => ['nullable', 'string', 'max:100'],
-            'notes'         => ['nullable', 'string'],
+            'table_id'         => ['nullable', 'exists:tables,id'],
+            'customer_id'      => ['nullable', 'exists:customers,id'],
+            'type'             => ['sometimes', Rule::in(['dine_in', 'takeaway', 'delivery'])],
+            'customer_name'    => ['nullable', 'string', 'max:100'],
+            'delivery_address' => ['nullable', 'string', 'max:255'],
+            'notes'            => ['nullable', 'string'],
             'items'         => ['required', 'array', 'min:1'],
             'items.*.product_id'        => ['required', 'exists:products,id'],
             'items.*.product_variant_id' => ['nullable', 'exists:product_variants,id'],
@@ -59,15 +81,17 @@ class OrderController extends Controller
 
         $order = DB::transaction(function () use ($request, $restaurantId) {
             $order = Order::create([
-                'restaurant_id' => $restaurantId,
-                'table_id'      => $request->table_id,
-                'user_id'       => $request->user()->id,
-                'order_number'  => Order::nextOrderNumber($restaurantId),
-                'type'          => $request->type ?? 'dine_in',
-                'customer_name' => $request->customer_name,
-                'notes'         => $request->notes,
-                'status'        => Order::STATUS_CONFIRMED,
-                'confirmed_at'  => now(),
+                'restaurant_id'    => $restaurantId,
+                'table_id'         => $request->table_id,
+                'user_id'          => $request->user()->id,
+                'customer_id'      => $request->customer_id,
+                'order_number'     => Order::nextOrderNumber($restaurantId),
+                'type'             => $request->type ?? 'dine_in',
+                'customer_name'    => $request->customer_name,
+                'delivery_address' => $request->delivery_address,
+                'notes'            => $request->notes,
+                'status'           => Order::STATUS_CONFIRMED,
+                'confirmed_at'     => now(),
             ]);
 
             foreach ($request->items as $itemData) {
@@ -131,10 +155,53 @@ class OrderController extends Controller
             'data'    => new OrderResource($order->load(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])),
         ], 201);
     }
+    public function printTicket(Request $request, Order $order): JsonResponse
+    {
+        $this->authorizeTenant($request, $order->restaurant_id);
+
+        $order->loadMissing(['table', 'user', 'restaurant', 'items.product', 'items.variant', 'items.extras.extra']);
+        $restaurant = $order->restaurant;
+
+        $ticketData = [
+            'is_pre_cuenta' => true,
+            'folio' => $order->order_number, // We use order number since there is no payment folio yet
+            'restaurant' => [
+                'name'    => $restaurant->name,
+                'address' => $restaurant->address,
+                'phone'   => $restaurant->phone,
+                'city'    => $restaurant->city,
+                'logo'    => $restaurant->logo, 
+            ],
+            'cashier' => $order->user->name ?? 'Sistema',
+            'date'    => now()->format('d/m/Y'),
+            'time'    => now()->format('H:i:s'),
+            'order_type'       => $order->type,
+            'customer_name'    => $order->customer_name,
+            'delivery_address' => $order->delivery_address,
+            'order_number'     => $order->order_number,
+            'table'            => $order->getRelation('table')?->name,
+            'items' => $order->items->map(fn($item) => [
+                'name' => $item->product->name,
+                'variant' => $item->variant?->name,
+                'extras' => $item->extras->map(fn($e) => $e->extra->name)->all(),
+                'quantity' => $item->quantity,
+                'unit_price' => (float) $item->unit_price,
+                'subtotal' => (float) $item->subtotal,
+            ])->all(),
+            'subtotal' => (float) $order->subtotal,
+            'tax' => (float) $order->tax,
+            'total' => (float) $order->total,
+            'grand_total' => (float) $order->total,
+        ];
+
+        return response()->json(['ticket_data' => $ticketData]);
+    }
 
     // ── ADD ITEMS ALREADY CREATED ORDER ────────────────
+
     public function addItems(Request $request, Order $order): JsonResponse
     {
+
         $this->authorizeTenant($request, $order->restaurant_id);
 
         if (in_array($order->status, [Order::STATUS_PAID, Order::STATUS_CANCELLED])) {

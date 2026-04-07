@@ -36,7 +36,7 @@ const NAV_ITEMS = [
         ),
     },
     {
-        label: 'Menú / Productos',
+        label: 'Menú',
         to: '/admin/menu',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,12 +66,22 @@ const NAV_ITEMS = [
         ),
     },
     {
-        label: 'Órdenes',
-        to: '/admin/ordenes',
+        label: 'Inventario',
+        to: '/admin/inventario',
         icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+        ),
+    },
+    {
+        label: 'Créditos',
+        to: '/admin/creditos',
+        icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
         ),
     },
@@ -88,7 +98,7 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminLayout() {
-    const [sidebarOpen, setSidebarOpen] = useState(false); // Closed by default on mobile
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
@@ -101,20 +111,23 @@ export default function AdminLayout() {
     const NavContent = ({ isMobile = false }) => (
         <>
             {/* Brand */}
-            <div className="flex items-center gap-3 px-4 h-16 border-b border-gray-800">
-                <div className="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shadow shadow-orange-500/30">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-3 px-4 h-14 border-b border-gray-800/60 flex-shrink-0">
+                <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                             d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6M17 13l1.5 6M9 19h6" />
                     </svg>
                 </div>
                 {(isMobile || desktopSidebarOpen) && (
-                    <span className="font-bold text-white text-sm tracking-wide">TaquerPOS</span>
+                    <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm tracking-tight">TaquerPOS</span>
+                        <span className="text-[9px] font-black text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded-md uppercase tracking-widest">Admin</span>
+                    </div>
                 )}
             </div>
 
             {/* Nav */}
-            <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
+            <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto scrollbar-none">
                 {NAV_ITEMS.map((item) => (
                     <NavLink
                         key={item.to}
@@ -122,35 +135,35 @@ export default function AdminLayout() {
                         end={item.end}
                         onClick={() => isMobile && setSidebarOpen(false)}
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-100 ${isActive
-                                ? 'bg-orange-500/15 text-orange-400'
-                                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                            `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
+                                ? 'bg-orange-500/15 text-orange-400 border border-orange-500/20'
+                                : 'text-gray-400 hover:bg-gray-800/60 hover:text-white border border-transparent'
                             }`
                         }
                     >
                         {item.icon}
-                        {(isMobile || desktopSidebarOpen) && <span>{item.label}</span>}
+                        {(isMobile || desktopSidebarOpen) && <span className="text-xs font-bold">{item.label}</span>}
                     </NavLink>
                 ))}
             </nav>
 
             {/* User footer */}
-            <div className="border-t border-gray-800 p-3">
+            <div className="border-t border-gray-800/60 p-3 flex-shrink-0">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center flex-shrink-0 text-orange-400 font-bold text-sm">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center flex-shrink-0 text-orange-400 font-bold text-sm border border-orange-500/10">
                         {user?.name?.[0]?.toUpperCase() || 'U'}
                     </div>
                     {(isMobile || desktopSidebarOpen) && (
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-white truncate">{user?.name}</p>
-                            <p className="text-xs text-gray-500 truncate capitalize">{user?.roles?.[0] || 'usuario'}</p>
+                            <p className="text-xs font-bold text-white truncate">{user?.name}</p>
+                            <p className="text-[10px] text-gray-500 truncate capitalize">{user?.roles?.[0] || 'usuario'}</p>
                         </div>
                     )}
                     {(isMobile || desktopSidebarOpen) && (
                         <button
                             onClick={handleLogout}
                             title="Cerrar sesión"
-                            className="text-gray-500 hover:text-red-400 transition-colors"
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -175,7 +188,7 @@ export default function AdminLayout() {
 
             {/* Mobile Sidebar (Drawer) */}
             <aside
-                className={`fixed inset-y-0 left-0 w-64 bg-gray-900 border-r border-gray-800 z-50 transform transition-transform duration-300 lg:hidden flex flex-col
+                className={`fixed inset-y-0 left-0 w-64 bg-gray-900/95 backdrop-blur-xl border-r border-gray-800/60 z-50 transform transition-transform duration-300 lg:hidden flex flex-col
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 <NavContent isMobile={true} />
@@ -183,7 +196,7 @@ export default function AdminLayout() {
 
             {/* Desktop Sidebar */}
             <aside
-                className={`${desktopSidebarOpen ? 'w-60' : 'w-16'} hidden lg:flex flex-shrink-0 flex flex-col bg-gray-900 border-r border-gray-800
+                className={`${desktopSidebarOpen ? 'w-56' : 'w-16'} hidden lg:flex flex-shrink-0 flex-col bg-gray-900/80 backdrop-blur-xl border-r border-gray-800/60
                     transition-all duration-200 ease-in-out`}
             >
                 <NavContent isMobile={false} />
@@ -191,14 +204,17 @@ export default function AdminLayout() {
 
             {/* Main */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                {/* Top accent */}
+                <div className="h-[2px] bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 flex-shrink-0" />
+
                 {/* Topbar */}
-                <header className="h-16 flex items-center px-4 border-b border-gray-800 bg-gray-900/50 gap-3 flex-shrink-0">
+                <header className="h-12 md:h-14 flex items-center px-3 md:px-4 border-b border-gray-800/60 bg-gray-900/50 backdrop-blur-xl gap-3 flex-shrink-0">
                     {/* Hamburger for mobile */}
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="p-2 -ml-2 text-gray-400 hover:text-white lg:hidden transition-colors"
+                        className="p-1.5 -ml-1 text-gray-400 hover:text-white lg:hidden transition-colors rounded-lg hover:bg-gray-800/50"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
@@ -206,16 +222,16 @@ export default function AdminLayout() {
                     {/* Desktop Toggle */}
                     <button
                         onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)}
-                        className="hidden lg:block text-gray-400 hover:text-white transition-colors"
+                        className="hidden lg:block text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-gray-800/50"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
 
                     {/* Breadcrumb / Title */}
                     <div className="flex-1 overflow-hidden">
-                        <span className="text-sm font-semibold text-gray-300 truncate">Administración</span>
+                        <span className="text-xs md:text-sm font-bold text-gray-300 truncate">Administración</span>
                     </div>
 
                     {/* Branch Switcher */}
@@ -223,7 +239,7 @@ export default function AdminLayout() {
                 </header>
 
                 {/* Page content */}
-                <main className="flex-1 overflow-auto p-4 md:p-6">
+                <main className="flex-1 min-h-0 overflow-auto p-3 md:p-6">
                     <Outlet />
                 </main>
             </div>

@@ -46,14 +46,14 @@ export default function TablesAdmin() {
     return (
         <div>
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
                 <div>
-                    <h1 className="text-xl font-bold text-white">Mesas</h1>
-                    <p className="text-gray-400 text-sm mt-0.5">{stats.total ?? 0} mesas activas</p>
+                    <h1 className="text-lg md:text-xl font-black text-white tracking-tight">Mesas</h1>
+                    <p className="text-gray-500 text-xs mt-0.5">{stats.total ?? 0} mesas activas</p>
                 </div>
                 <button
                     onClick={() => setModal({ open: true, table: null })}
-                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow shadow-orange-500/20"
+                    className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-xs font-black px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-orange-500/20 active:scale-[0.98] uppercase tracking-wider"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -63,9 +63,9 @@ export default function TablesAdmin() {
             </div>
 
             {/* Stats pills */}
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex flex-wrap gap-1.5 md:gap-2 mb-4 md:mb-6">
                 {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                    <div key={key} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium ${cfg.bg} ${cfg.border} ${cfg.color}`}>
+                    <div key={key} className={`flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl border text-[10px] md:text-xs font-bold ${cfg.bg} ${cfg.border} ${cfg.color}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                         {cfg.label} · {stats[key] ?? 0}
                     </div>
@@ -90,24 +90,24 @@ export default function TablesAdmin() {
                     {Object.entries(zones).sort().map(([zone, zoneTables]) => (
                         <div key={zone}>
                             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">{zone}</h2>
-                            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                            <div className="grid gap-2.5 md:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                                 {zoneTables.sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name)).map((t) => {
                                     const cfg = STATUS_CONFIG[t.status];
                                     return (
-                                        <div key={t.id} className={`group relative bg-gray-800/60 border ${cfg.border} rounded-2xl p-4 transition-all`}>
+                                        <div key={t.id} className={`relative bg-gray-900/40 border ${cfg.border} rounded-2xl p-3 md:p-4 transition-all`}>
                                             <div className="flex items-start justify-between mb-3">
-                                                <h3 className="text-white font-bold text-lg">{t.name}</h3>
-                                                <span className={`flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color} border ${cfg.border}`}>
+                                                <h3 className="text-white font-black text-sm md:text-lg">{t.name}</h3>
+                                                <span className={`flex items-center gap-1 text-[9px] md:text-xs px-1.5 md:px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color} border ${cfg.border}`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                                                     {cfg.label}
                                                 </span>
                                             </div>
-                                            <p className="text-gray-400 text-xs">
-                                                👥 {t.capacity} persona{t.capacity !== 1 ? 's' : ''}
+                                            <p className="text-gray-500 text-[10px] md:text-xs">
+                                                👥 {t.capacity}
                                             </p>
 
                                             {/* Actions */}
-                                            <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="flex gap-1.5 md:gap-2 mt-2 md:mt-3">
                                                 <button
                                                     onClick={() => setModal({ open: true, table: t })}
                                                     className="flex-1 text-xs text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg py-1.5 transition-colors"

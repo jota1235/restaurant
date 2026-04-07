@@ -9,6 +9,7 @@ class Category extends Model
 {
     protected $fillable = [
         'restaurant_id',
+        'assigned_cook_id',
         'name',
         'slug',
         'description',
@@ -35,6 +36,11 @@ class Category extends Model
     public function restaurant()
     {
         return $this->belongsTo(Restaurant::class);
+    }
+
+    public function assignedCook()
+    {
+        return $this->belongsTo(User::class, 'assigned_cook_id');
     }
 
     public function products()

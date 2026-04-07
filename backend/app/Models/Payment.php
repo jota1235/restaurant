@@ -82,16 +82,21 @@ class Payment extends Model
         return [
             'folio' => $this->ticket_folio,
             'restaurant' => [
-                'name' => $restaurant->name,
+                'name'    => $restaurant->name,
                 'address' => $restaurant->address,
-                'phone' => $restaurant->phone,
-                'city' => $restaurant->city,
+                'phone'   => $restaurant->phone,
+                'city'    => $restaurant->city,
+                'logo'    => $restaurant->logo, // base64 data URI
             ],
             'cashier' => $this->user->name,
-            'date' => $this->created_at->format('d/m/Y'),
-            'time' => $this->created_at->format('H:i:s'),
-            'order_number' => $order->order_number,
-            'table' => $order->table?->name ?? 'Para llevar',
+            'date'    => now()->format('d/m/Y'),
+            'time'    => now()->format('H:i:s'),
+            'order_type'       => $order->type,
+            'customer_name'    => $order->customer_name,
+            'delivery_address' => $order->delivery_address,
+            'order_number'     => $order->order_number,
+            // Use getRelation() to bypass Eloquent's internal $table property conflict
+            'table'            => $order->getRelation('table')?->name,
             'items' => $order->items->map(fn($item) => [
                 'name' => $item->product->name,
                 'variant' => $item->variant?->name,

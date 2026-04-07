@@ -9,5 +9,6 @@ export const ordersAPI = {
         api.patch(`/api/orders/${orderId}/items/${itemId}/status`, { status }).then(r => r.data),
     addItems: (orderId, data) => api.post(`/api/orders/${orderId}/items`, data).then(r => r.data),
     removeItem: (orderId, itemId) => api.delete(`/api/orders/${orderId}/items/${itemId}`).then(r => r.data),
+    getTicket: (id) => api.get(`/api/orders/${id}/ticket`).then(r => r.data),
     cancel: (id) => api.delete(`/api/orders/${id}`).then(r => r.data),
 };

@@ -190,4 +190,71 @@ class CashRegisterController extends Controller
 
         return response()->json(['movements' => $movements]);
     }
+    public function summary(Request $request)
+    {
+        $restaurantId = $this->getRestaurantId($request);
+        $shift = CashRegister::where('restaurant_id', $restaurantId)
+            ->where('status', 'open')
+            ->first();
+
+        if (!$shift) {
+            return response()->json([
+                'cash_sales' => 0,
+                'card_sales' => 0,
+                'transfer_sales' => 0,
+                'other_sales' => 0,
+                'total_sales' => 0,
+                'expected_balance' => 0
+            ]);
+        }
+
+        // Calculate sales by payment method
+        $payments = Payment::where('cash_register_id', $shift->id)
+            ->where('status', 'completed')
+            ->selectRaw('payment_method, sum(amount) as total')
+            ->groupBy('payment_method')
+            ->pluck('total', 'payment_method');
+
+        $cashSales = (float) ($payments['cash'] ?? 0);
+        $cardSales = (float) ($payments['card'] ?? 0);
+        $transferSales = (float) ($payments['transfer'] ?? 0);
+        $otherSales = (float) ($payments['other'] ?? 0);
+        $totalSales = $cashSales + $cardSales + $transferSales + $otherSales;
+
+        // Fetch movements
+        $inMovements = CashMovement::where('cash_register_id', $shift->id)
+            ->where('type', 'in')
+            ->sum('amount');
+
+        $outMovements = CashMovement::where('cash_register_id', $shift->id)
+            ->where('type', 'out')
+            ->sum('amount');
+
+        $expectedBalance = $shift->opening_balance + $cashSales + $inMovements - $outMovements;
+
+        return response()->json([
+            'shift' => $shift,
+            'cash_sales' => $cashSales,
+            'card_sales' => $cardSales,
+            'transfer_sales' => $transferSales,
+            'other_sales' => $otherSales,
+            'total_sales' => $totalSales,
+            'in_movements' => (float) $inMovements,
+            'out_movements' => (float) $outMovements,
+            'expected_balance' => $expectedBalance
+        ]);
+    }
+
+    public function history(Request $request)
+    {
+        $restaurantId = $this->getRestaurantId($request);
+        
+        $shifts = CashRegister::where('restaurant_id', $restaurantId)
+            ->where('status', 'closed')
+            ->with(['user:id,name'])
+            ->latest('closed_at')
+            ->paginate(10);
+            
+        return response()->json($shifts);
+    }
 }

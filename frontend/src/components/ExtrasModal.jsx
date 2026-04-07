@@ -30,13 +30,13 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
         selectedExtras.reduce((sum, e) => sum + e.price, 0)) * quantity;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-gray-950 border border-gray-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+            <div className="bg-gray-950 border border-gray-800/50 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh] sm:mx-4" onClick={e => e.stopPropagation()}>
                 {/* Header */}
-                <div className="p-4 bg-gray-900 border-b border-gray-800 flex justify-between items-center">
+                <div className="p-3 md:p-4 bg-gray-900/50 border-b border-gray-800/50 flex justify-between items-center flex-shrink-0">
                     <div>
-                        <h2 className="text-xl font-bold text-white">{product.name}</h2>
-                        <p className="text-gray-500 text-sm font-medium">Personaliza tu orden</p>
+                        <h2 className="text-lg font-black text-white tracking-tight">{product.name}</h2>
+                        <p className="text-gray-500 text-xs font-medium">Personaliza tu orden</p>
                     </div>
                     <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-xl">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 md:p-4 space-y-5 scrollbar-none">
                     {/* Variants / Tamaño / Sabor */}
                     {product.variants?.length > 0 && (
                         <div>
@@ -56,8 +56,8 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
                                         key={v.id}
                                         onClick={() => setSelectedVariant(v)}
                                         className={`p-3 rounded-2xl border text-sm font-bold transition-all text-left ${selectedVariant?.id === v.id
-                                                ? 'bg-orange-500/10 border-orange-500 text-orange-400'
-                                                : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700'
+                                            ? 'bg-orange-500/10 border-orange-500 text-orange-400'
+                                            : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700'
                                             }`}
                                     >
                                         <div className="flex flex-col">
@@ -86,8 +86,8 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
                                             key={e.id}
                                             onClick={() => toggleExtra(e)}
                                             className={`w-full p-4 rounded-2xl border flex justify-between items-center transition-all ${isSelected
-                                                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
-                                                    : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700'
+                                                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
+                                                : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-700'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
@@ -122,7 +122,7 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
                 </div>
 
                 {/* Footer / Confirm */}
-                <div className="p-4 bg-gray-900 border-t border-gray-800 space-y-4">
+                <div className="p-3 md:p-4 bg-gray-900/50 border-t border-gray-800/50 space-y-3 flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center bg-gray-950 border border-gray-800 rounded-2xl p-1">
                             <button
@@ -143,7 +143,7 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
 
                     <button
                         onClick={handleConfirm}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-950/20 transition-all active:scale-[0.98]"
+                        className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] uppercase text-xs tracking-wider"
                     >
                         AÑADIR A LA ORDEN
                     </button>

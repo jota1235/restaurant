@@ -46,7 +46,7 @@ class ProductController extends Controller
             'price'        => 'required|numeric|min:0',
             'sort_order'   => 'sometimes|integer|min:0',
             'is_available' => 'sometimes',
-            'image'        => 'nullable|image|max:2048',
+            'image'        => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:8192',
             'variants'     => 'sometimes|array',
             'variants.*.name'           => 'required|string|max:100',
             'variants.*.price_modifier' => 'required|numeric',
@@ -127,7 +127,7 @@ class ProductController extends Controller
             'sort_order'   => 'sometimes|integer|min:0',
             'is_available' => 'sometimes',
             'is_active'    => 'sometimes',
-            'image'        => 'nullable|image|max:2048',
+            'image'        => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:8192',
             'variants'     => 'sometimes',
             'extras'       => 'sometimes',
         ]);
@@ -206,7 +206,11 @@ class ProductController extends Controller
     private function authorizeTenant(Request $request, int $restaurantId): void
     {
         $user = $request->user();
-        if (!$user->hasRole('superadmin') && $user->restaurant_id !== $restaurantId) {
+        if ($user->hasRole('superadmin')) return;
+
+        // Accept the active restaurant from header (set by the axios interceptor)
+        $activeRestaurantId = (int) $request->header('X-Restaurant-Id', $user->restaurant_id);
+        if ($activeRestaurantId !== $restaurantId) {
             abort(403, 'Sin permisos');
         }
     }
