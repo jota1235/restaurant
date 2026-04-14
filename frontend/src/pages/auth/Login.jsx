@@ -8,7 +8,10 @@ const ROLE_REDIRECTS = {
     mesero: '/mesero',
     cocina: '/cocina',
     caja: '/caja',
+    almacenista: '/admin/inventario',
 };
+
+const getRoleName = (role) => typeof role === 'string' ? role : role?.name;
 
 export default function Login() {
     const navigate = useNavigate();
@@ -18,8 +21,8 @@ export default function Login() {
     useEffect(() => {
         if (isAuthenticated && user && !requiresBranchSelection) {
             const roles = user.roles || [];
-            const primaryRole = roles[0];
-            const redirect = ROLE_REDIRECTS[primaryRole] || '/dashboard';
+            const primaryRole = getRoleName(roles[0]);
+            const redirect = ROLE_REDIRECTS[primaryRole] || '/admin';
             navigate(redirect, { replace: true });
         }
     }, [isAuthenticated, user, navigate, requiresBranchSelection]);
@@ -33,8 +36,8 @@ export default function Login() {
                 navigate('/select-branch', { replace: true });
             } else {
                 const roles = result.data.user?.roles || [];
-                const primaryRole = roles[0];
-                const redirect = ROLE_REDIRECTS[primaryRole] || '/dashboard';
+                const primaryRole = getRoleName(roles[0]);
+                const redirect = ROLE_REDIRECTS[primaryRole] || '/admin';
                 navigate(redirect, { replace: true });
             }
         }
