@@ -159,6 +159,18 @@ class RestaurantController extends Controller
             ]);
         } else {
             $planId = Plan::where('is_active', true)->value('id');
+
+            // Si no hay plan en la base de datos, crea uno genérico por defecto
+            if (!$planId) {
+                $plan = Plan::create([
+                    'name' => 'Plan Básico',
+                    'price' => 0,
+                    'is_active' => true,
+                    'features' => ['all'],
+                ]);
+                $planId = $plan->id;
+            }
+
             Subscription::create([
                 'restaurant_id' => $restaurant->id,
                 'plan_id'       => $planId,
