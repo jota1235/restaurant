@@ -28,6 +28,12 @@ export default function RestaurantsPage() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
+    // Extend subscription
+    const [showExtendModal, setShowExtendModal] = useState(false);
+    const [extendRestaurant, setExtendRestaurant] = useState(null);
+    const [extendForm, setExtendForm] = useState({ ends_at: '', status: 'active' });
+    const [extendSaving, setExtendSaving] = useState(false);
+
     const fetchRestaurants = useCallback(async () => {
         setLoading(true);
         try {
@@ -70,6 +76,27 @@ export default function RestaurantsPage() {
             await restaurantsAPI.toggleActive(r.id);
             fetchRestaurants();
         } catch (e) { console.error(e); }
+    };
+
+    const openExtend = (r) => {
+        setExtendRestaurant(r);
+        setExtendForm({
+            ends_at: r.subscription?.ends_at ?? '',
+            status: r.subscription?.status ?? 'active',
+        });
+        setShowExtendModal(true);
+    };
+
+    const handleExtend = async (e) => {
+        e.preventDefault();
+        setExtendSaving(true);
+        try {
+            await restaurantsAPI.extendSubscription(extendRestaurant.id, extendForm);
+            setShowExtendModal(false);
+            fetchRestaurants();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error al actualizar suscripción');
+        } finally { setExtendSaving(false); }
     };
 
     const handleSubmit = async (e) => {
@@ -148,6 +175,12 @@ export default function RestaurantsPage() {
                                             className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="Editar">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <button onClick={() => openExtend(r)}
+                                            className="p-1.5 text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Extender suscripción">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                         </button>
                                         <button onClick={() => handleToggle(r)}
@@ -314,6 +347,59 @@ export default function RestaurantsPage() {
                                             Guardando…
                                         </>
                                     ) : (modalMode === 'edit' ? 'Guardar Cambios' : 'Crear Restaurante')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Extend Subscription Modal */}
+            {showExtendModal && extendRestaurant && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center" onClick={() => setShowExtendModal(false)}>
+                    <div className="bg-gray-900 border border-gray-800/50 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm sm:mx-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-5 border-b border-gray-800/50">
+                            <div>
+                                <h2 className="text-base font-bold text-white">📅 Extender Suscripción</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">{extendRestaurant.name}</p>
+                            </div>
+                            <button onClick={() => setShowExtendModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <form onSubmit={handleExtend} className="p-5 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Nueva fecha de vencimiento *</label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={extendForm.ends_at}
+                                    onChange={e => setExtendForm(f => ({ ...f, ends_at: e.target.value }))}
+                                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Estado de la suscripción</label>
+                                <select
+                                    value={extendForm.status}
+                                    onChange={e => setExtendForm(f => ({ ...f, status: e.target.value }))}
+                                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+                                >
+                                    <option value="active">Activa</option>
+                                    <option value="trial">Prueba</option>
+                                    <option value="cancelled">Cancelada</option>
+                                </select>
+                            </div>
+                            <div className="flex gap-3 pt-1">
+                                <button type="button" onClick={() => setShowExtendModal(false)}
+                                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2.5 rounded-xl text-sm transition-colors border border-gray-700">
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={extendSaving}
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors shadow shadow-emerald-500/20 flex items-center justify-center gap-2">
+                                    {extendSaving ? 'Guardando…' : 'Guardar'}
                                 </button>
                             </div>
                         </form>

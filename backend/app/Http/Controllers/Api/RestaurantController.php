@@ -137,6 +137,44 @@ class RestaurantController extends Controller
     }
 
     /**
+     * Extender o renovar suscripción (solo superadmin)
+     */
+    public function extendSubscription(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        if (!$request->user()->hasRole('superadmin')) {
+            return response()->json(['message' => 'Sin permisos'], 403);
+        }
+
+        $request->validate([
+            'ends_at' => ['required', 'date', 'after:today'],
+            'status'  => ['sometimes', 'in:active,trial,cancelled'],
+        ]);
+
+        $subscription = $restaurant->subscription;
+
+        if ($subscription) {
+            $subscription->update([
+                'ends_at' => $request->ends_at,
+                'status'  => $request->status ?? 'active',
+            ]);
+        } else {
+            $planId = Plan::where('is_active', true)->value('id');
+            Subscription::create([
+                'restaurant_id' => $restaurant->id,
+                'plan_id'       => $planId,
+                'starts_at'     => now(),
+                'ends_at'       => $request->ends_at,
+                'status'        => $request->status ?? 'active',
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Suscripción actualizada',
+            'data'    => new RestaurantResource($restaurant->fresh(['subscription.plan'])),
+        ]);
+    }
+
+    /**
      * Asegurar que admin solo accede a su restaurante
      */
     private function authorizeRestaurantAccess(Request $request, Restaurant $restaurant): void

@@ -11,4 +11,5 @@ export const ordersAPI = {
     removeItem: (orderId, itemId) => api.delete(`/api/orders/${orderId}/items/${itemId}`).then(r => r.data),
     getTicket: (id) => api.get(`/api/orders/${id}/ticket`).then(r => r.data),
     cancel: (id) => api.delete(`/api/orders/${id}`).then(r => r.data),
+    markCookItemsReady: (id) => api.post(`/api/orders/${id}/mark-cook-items-ready`).then(r => r.data),
 };

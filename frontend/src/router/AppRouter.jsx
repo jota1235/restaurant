@@ -91,6 +91,7 @@ export default function AppRouter() {
                         <Route path="/caja/corte" element={<CashRegisterControl />} />
                         <Route path="/caja/historial" element={<PaymentHistory />} />
                         <Route path="/caja/orden" element={<NewOrderPage />} />
+                        <Route path="/caja/creditos" element={<CreditsPage />} />
                     </Route>
                 </Route>
 

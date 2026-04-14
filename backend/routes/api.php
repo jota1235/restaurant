@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('role:superadmin')->group(function () {
             Route::apiResource('restaurants', RestaurantController::class)->except(['update']);
             Route::patch('restaurants/{restaurant}/toggle-active', [RestaurantController::class, 'toggleActive']);
+            Route::patch('restaurants/{restaurant}/extend-subscription', [RestaurantController::class, 'extendSubscription']);
         });
         // Admin también puede ver/editar SU restaurante
         Route::middleware('role:superadmin,admin')->group(function () {
@@ -125,6 +126,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('role:superadmin,admin,mesero,cocina,caja')->group(function () {
             Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus']);
             Route::patch('orders/{order}/items/{item}/status', [OrderController::class, 'updateItemStatus']);
+            Route::post('orders/{order}/mark-cook-items-ready', [OrderController::class, 'markCookItemsReady']);
         });
 
         // ===== PAGOS (Caja, Admin) =====

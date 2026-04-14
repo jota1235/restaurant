@@ -270,7 +270,7 @@ class OrderController extends Controller
         });
 
         // Broadcast a refresh to KDS because order changed
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])))->toOthers();
+        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
 
         AuditLogger::log(
             'order.items_added',
@@ -301,7 +301,7 @@ class OrderController extends Controller
         $item->delete();
         $order->recalculate();
 
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])))->toOthers();
+        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
 
         AuditLogger::log(
             'order.item_removed',
@@ -351,7 +351,7 @@ class OrderController extends Controller
         }
 
         // Broadcast event
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])))->toOthers();
+        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
 
         // Audit Log for sensitive status changes
         if (in_array($request->status, ['paid', 'cancelled'])) {
@@ -387,9 +387,38 @@ class OrderController extends Controller
         }
 
         // Broadcast event
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])))->toOthers();
+        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
 
         return response()->json(['message' => 'Ítem actualizado', 'item_status' => $item->status, 'order_status' => $order->fresh()->status]);
+    }
+
+    // ── MARK COOK ITEMS READY ──────────────────────────
+    public function markCookItemsReady(Request $request, Order $order): JsonResponse
+    {
+        $this->authorizeTenant($request, $order->restaurant_id);
+        $cookId = $request->user()->id;
+
+        // Find items that belong to this cook and are not ready
+        $items = $order->items()->whereNotIn('status', ['ready', 'delivered'])->get();
+        
+        $updated = false;
+        foreach ($items as $item) {
+            $assignedCookId = $item->product?->category?->assigned_cook_id;
+            if ($assignedCookId === $cookId) {
+                $item->update(['status' => 'ready']);
+                $updated = true;
+            }
+        }
+
+        if ($updated) {
+            $allReady = $order->items()->whereNotIn('status', ['ready', 'delivered'])->doesntExist();
+            if ($allReady && $order->status === Order::STATUS_CONFIRMED) {
+                $order->update(['status' => Order::STATUS_READY, 'ready_at' => now()]);
+            }
+            broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+        }
+
+        return response()->json(['message' => 'Tus ítems fueron marcados como completados']);
     }
 
     // ── CANCEL ─────────────────────────────────────────

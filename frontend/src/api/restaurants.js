@@ -7,4 +7,5 @@ export const restaurantsAPI = {
     update: (id, data) => api.patch(`/api/restaurants/${id}`, data).then(r => r.data),
     toggleActive: (id) => api.patch(`/api/restaurants/${id}/toggle-active`).then(r => r.data),
     delete: (id) => api.delete(`/api/restaurants/${id}`).then(r => r.data),
+    extendSubscription: (id, data) => api.patch(`/api/restaurants/${id}/extend-subscription`, data).then(r => r.data),
 };

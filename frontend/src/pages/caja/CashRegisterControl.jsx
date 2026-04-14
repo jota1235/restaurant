@@ -12,9 +12,9 @@ export default function CashRegisterControl() {
     const [movements, setMovements] = useState([]);
 
     // Forms
-    const [openForm, setOpenForm] = useState({ opening_balance: 0, notes: '' });
-    const [closeForm, setCloseForm] = useState({ closing_balance: 0, notes: '' });
-    const [movementForm, setMovementForm] = useState({ type: 'out', amount: 0, reason: '', notes: '' });
+    const [openForm, setOpenForm] = useState({ opening_balance: '', notes: '' });
+    const [closeForm, setCloseForm] = useState({ closing_balance: '', notes: '' });
+    const [movementForm, setMovementForm] = useState({ type: 'out', amount: '', reason: '', notes: '' });
 
     const fetchStatus = useCallback(async () => {
         try {
@@ -68,7 +68,8 @@ export default function CashRegisterControl() {
         if (!window.confirm('¿Seguro que desea cerrar la caja con estos montos?')) return;
         try {
             await paymentAPI.closeRegister(closeForm);
-            fetchStatus();
+            await fetchStatus();
+            await fetchHistory();
             setActiveTab('history');
         } catch (e) {
             alert(e.response?.data?.message || 'Error al cerrar caja');

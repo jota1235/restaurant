@@ -470,7 +470,7 @@ export default function CajaPage() {
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-600">$</span>
                                     <input
                                         type="number"
-                                        value={paymentData.tip}
+                                        value={paymentData.tip === 0 ? '' : paymentData.tip}
                                         onChange={(e) => setPaymentData({ ...paymentData, tip: parseFloat(e.target.value) || 0 })}
                                         className="w-full bg-gray-900/50 border border-gray-800/50 rounded-2xl pl-9 pr-5 py-4 text-white font-bold focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all placeholder:text-gray-700"
                                         placeholder="0.00"
@@ -486,7 +486,7 @@ export default function CajaPage() {
                                         <span className="absolute left-0 top-1/2 -translate-y-1/2 text-2xl font-black text-gray-600">$</span>
                                         <input
                                             type="number"
-                                            value={paymentData.received}
+                                            value={paymentData.received === 0 ? '' : paymentData.received}
                                             onChange={(e) => setPaymentData({ ...paymentData, received: parseFloat(e.target.value) || 0 })}
                                             className="w-full bg-transparent text-3xl font-black text-white outline-none placeholder:text-gray-800 pl-8"
                                             placeholder="0.00"
