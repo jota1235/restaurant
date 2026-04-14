@@ -30,9 +30,12 @@ return [
         'http://192.168.1.102:8000',
         'http://192.168.56.1:5173',
         'http://127.0.0.1:8000',
+        'https://restaurant-sepia-phi.vercel.app',
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://restaurant-.*\.vercel\.app$#',
+    ],
 
     'allowed_headers' => ['*'],
 
