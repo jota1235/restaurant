@@ -55,7 +55,8 @@ class InventoryController extends Controller
             'notes'         => 'nullable|string',
         ]);
 
-        $restaurantId = (int) $request->header('X-Restaurant-Id', $request->user()->restaurant_id);
+        $restaurantId = $request->get('restaurant_id')
+            ?? (int) $request->header('X-Restaurant-Id', $request->user()->restaurant_id);
 
         $item = InventoryItem::create([
             'restaurant_id' => $restaurantId,
