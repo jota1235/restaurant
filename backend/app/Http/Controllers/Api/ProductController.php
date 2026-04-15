@@ -39,6 +39,13 @@ class ProductController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if ($request->has('variants') && is_string($request->variants)) {
+            $request->merge(['variants' => json_decode($request->variants, true)]);
+        }
+        if ($request->has('extras') && is_string($request->extras)) {
+            $request->merge(['extras' => json_decode($request->extras, true)]);
+        }
+
         $request->validate([
             'category_id'  => 'required|exists:categories,id',
             'name'         => 'required|string|max:150',
@@ -118,6 +125,13 @@ class ProductController extends Controller
     public function update(Request $request, Product $product): JsonResponse
     {
         $this->authorizeTenant($request, $product->restaurant_id);
+
+        if ($request->has('variants') && is_string($request->variants)) {
+            $request->merge(['variants' => json_decode($request->variants, true)]);
+        }
+        if ($request->has('extras') && is_string($request->extras)) {
+            $request->merge(['extras' => json_decode($request->extras, true)]);
+        }
 
         $request->validate([
             'category_id'  => 'sometimes|exists:categories,id',
