@@ -12,7 +12,7 @@ const useAuthStore = create((set, get) => ({
     // Multi-branch state
     restaurants: JSON.parse(localStorage.getItem('restaurants')) || [],
     activeRestaurantId: localStorage.getItem('active_restaurant_id') || null,
-    requiresBranchSelection: false,
+    requiresBranchSelection: localStorage.getItem('requires_branch_selection') === 'true',
 
     // Acciones
     login: async (credentials) => {
@@ -25,6 +25,7 @@ const useAuthStore = create((set, get) => ({
             localStorage.setItem('auth_token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('restaurants', JSON.stringify(data.restaurants || []));
+            localStorage.setItem('requires_branch_selection', data.requires_branch_selection ? 'true' : 'false');
 
             const activeId = data.active_restaurant_id || data.user?.restaurant_id;
             if (activeId) {
@@ -53,6 +54,7 @@ const useAuthStore = create((set, get) => ({
         try {
             await authAPI.selectBranch(restaurantId);
             localStorage.setItem('active_restaurant_id', restaurantId);
+            localStorage.setItem('requires_branch_selection', 'false');
 
             const restaurant = get().restaurants.find(r => r.id === restaurantId);
 
@@ -109,6 +111,7 @@ const useAuthStore = create((set, get) => ({
             localStorage.removeItem('user');
             localStorage.removeItem('restaurants');
             localStorage.removeItem('active_restaurant_id');
+            localStorage.removeItem('requires_branch_selection');
 
             set({
                 user: null,

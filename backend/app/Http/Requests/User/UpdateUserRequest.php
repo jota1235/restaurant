@@ -21,6 +21,7 @@ class UpdateUserRequest extends FormRequest
             'email'     => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($userId)],
             'password'  => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed'],
             'role'      => ['sometimes', Rule::in(['admin', 'mesero', 'cocina', 'caja'])],
+            'restaurant_id'   => ['sometimes', 'nullable', 'exists:restaurants,id'],
             'restaurant_ids'  => ['sometimes', 'array'],
             'restaurant_ids.*' => ['exists:restaurants,id'],
             'is_active' => ['sometimes', 'boolean'],

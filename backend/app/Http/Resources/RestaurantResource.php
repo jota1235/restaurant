@@ -20,7 +20,7 @@ class RestaurantResource extends JsonResource
             'state'      => $this->state,
             'country'    => $this->country,
             'is_active'  => $this->is_active,
-            'users_count'=> $this->whenCounted('users'),
+            'users_count' => max((int)($this->users_count ?? 0), (int)($this->members_count ?? 0)),
             'subscription' => $this->whenLoaded('subscription', function () {
                 return [
                     'status'  => $this->subscription?->status,
@@ -35,6 +35,8 @@ class RestaurantResource extends JsonResource
                     }),
                 ];
             }),
+            'tax_rate'   => (float) $this->tax_rate,
+            'logo'       => $this->logo,
             'created_at' => $this->created_at?->format('Y-m-d'),
         ];
     }

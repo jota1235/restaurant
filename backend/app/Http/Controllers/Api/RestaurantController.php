@@ -23,7 +23,7 @@ class RestaurantController extends Controller
         $user = $request->user();
 
         $query = Restaurant::with(['subscription.plan'])
-            ->withCount('users');
+            ->withCount(['users', 'members']);
 
         // Superadmin ve todos; admin solo el suyo
         if (!$user->hasRole('superadmin')) {

@@ -47,7 +47,9 @@ class UserResource extends JsonResource
             'permissions' => $this->whenLoaded('permissions', function () {
                 return $this->permissions->pluck('name');
             }),
-            'restaurant_ids' => $this->restaurants()->pluck('restaurants.id'),
+            'restaurant_ids' => $this->whenLoaded('restaurants', function () {
+                return $this->restaurants->pluck('id')->map(fn($id) => (int) $id)->values();
+            }, fn() => $this->restaurants()->pluck('restaurants.id')->map(fn($id) => (int) $id)->values()),
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
         ];
     }

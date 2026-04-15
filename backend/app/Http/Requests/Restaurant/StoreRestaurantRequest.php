@@ -24,6 +24,7 @@ class StoreRestaurantRequest extends FormRequest
             'country'          => ['nullable', 'string', 'max:100'],
             'plan_id'          => ['nullable', 'exists:plans,id'],
             'duration_months'  => ['nullable', 'integer', 'min:1', 'max:36'],
+            'logo'             => ['nullable', 'string'], // base64 data URI
         ];
     }
 
