@@ -25,9 +25,10 @@ class RestaurantController extends Controller
         $query = Restaurant::with(['subscription.plan'])
             ->withCount(['users', 'members']);
 
-        // Superadmin ve todos; admin solo el suyo
+        // Superadmin ve todos; admin ve los que tiene asignados
         if (!$user->hasRole('superadmin')) {
-            $query->where('id', $user->restaurant_id);
+            $restaurantIds = $user->restaurants()->pluck('restaurants.id')->push($user->restaurant_id)->unique()->filter();
+            $query->whereIn('id', $restaurantIds);
         }
 
         $restaurants = $query->latest()->paginate(20);
@@ -192,7 +193,7 @@ class RestaurantController extends Controller
     private function authorizeRestaurantAccess(Request $request, Restaurant $restaurant): void
     {
         $user = $request->user();
-        if (!$user->hasRole('superadmin') && $user->restaurant_id !== $restaurant->id) {
+        if (!$user->canAccessRestaurant($restaurant->id)) {
             abort(403, 'Sin permisos para este restaurante');
         }
     }
