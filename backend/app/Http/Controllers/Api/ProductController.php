@@ -64,7 +64,7 @@ class ProductController extends Controller
         $restaurantId = $request->get('restaurant_id');
 
         $slug = Str::slug($request->name);
-        if (Product::forRestaurant($restaurantId)->where('slug', $slug)->exists()) {
+        if (Product::forRestaurant($restaurantId)->withTrashed()->where('slug', $slug)->exists()) {
             $slug = $slug . '-' . time();
         }
 
