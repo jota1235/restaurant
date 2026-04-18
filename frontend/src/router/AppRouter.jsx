@@ -27,6 +27,7 @@ import CreditsPage from '../pages/admin/CreditsPage';
 import TableMap from '../pages/mesero/TableMap';
 import MeseroHome from '../pages/mesero/MeseroHome';
 import NewOrderPage from '../pages/mesero/NewOrderPage';
+import TakeawayOrders from '../pages/mesero/TakeawayOrders';
 import CocinaPage from '../pages/cocina/CocinaPage';
 import CajaPage from '../pages/caja/CajaPage';
 import CashRegisterControl from '../pages/caja/CashRegisterControl';
@@ -68,12 +69,13 @@ export default function AppRouter() {
                     </Route>
                 </Route>
 
-                {/* Mesero */}
+        {/* Mesero */}
                 <Route element={<ProtectedRoute allowedRoles={['mesero', 'admin', 'superadmin']} />}>
                     <Route element={<MeseroLayout />}>
                         <Route path="/mesero" element={<MeseroHome />} />
                         <Route path="/mesero/mesas" element={<TableMap />} />
                         <Route path="/mesero/orden" element={<NewOrderPage />} />
+                        <Route path="/mesero/para-llevar" element={<TakeawayOrders />} />
                     </Route>
                 </Route>
 

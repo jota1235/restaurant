@@ -40,7 +40,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
         price: product?.price ?? '',
         category_id: product?.category?.id ?? categories[0]?.id ?? '',
         is_available: product?.is_available ?? true,
-        variants: product?.variants?.map(v => ({ name: v.name, price_modifier: v.price_modifier })) ?? [],
+        variants: product?.variants?.map(v => ({ name: v.name, price_modifier: v.price_modifier, is_open_price: v.is_open_price ?? false })) ?? [],
         extras: product?.extras?.map(e => e.id) ?? [],
     });
     const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
 
     const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
-    const addVariant = () => setForm(f => ({ ...f, variants: [...f.variants, { name: '', price_modifier: 0 }] }));
+    const addVariant = () => setForm(f => ({ ...f, variants: [...f.variants, { name: '', price_modifier: 0, is_open_price: false }] }));
     const removeVariant = (i) => setForm(f => ({ ...f, variants: f.variants.filter((_, idx) => idx !== i) }));
     const setVariant = (i, field, value) =>
         setForm(f => ({ ...f, variants: f.variants.map((v, idx) => idx === i ? { ...v, [field]: value } : v) }));
@@ -289,28 +289,45 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
                         {form.variants.length > 0 && (
                             <div className="space-y-2">
                                 {form.variants.map((v, i) => (
-                                    <div key={i} className="flex gap-2 items-center">
-                                        <input
-                                            type="text" required value={v.name}
-                                            onChange={e => setVariant(i, 'name', e.target.value)}
-                                            placeholder="Grande, Sin picante…"
-                                            className={`${inputCls()} flex-1`}
-                                        />
-                                        <div className="relative w-28 flex-shrink-0">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">+$</span>
+                                    <div key={i} className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-2.5">
+                                        <div className="flex gap-2 items-center">
                                             <input
-                                                type="number" step="0.01" value={v.price_modifier}
-                                                onChange={e => setVariant(i, 'price_modifier', e.target.value)}
-                                                className={`${inputCls()} pl-8 w-full`}
-                                                placeholder="0.00"
+                                                type="text" required value={v.name}
+                                                onChange={e => setVariant(i, 'name', e.target.value)}
+                                                placeholder="Grande, Sin picante…"
+                                                className={`${inputCls()} flex-1`}
                                             />
+                                            <div className="relative w-28 flex-shrink-0">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">+$</span>
+                                                <input
+                                                    type="number" step="0.01" value={v.price_modifier}
+                                                    onChange={e => setVariant(i, 'price_modifier', e.target.value)}
+                                                    className={`${inputCls()} pl-8 w-full`}
+                                                    placeholder="0.00"
+                                                    disabled={v.is_open_price}
+                                                />
+                                            </div>
+                                            <button type="button" onClick={() => removeVariant(i)}
+                                                className="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0 p-1">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
                                         </div>
-                                        <button type="button" onClick={() => removeVariant(i)}
-                                            className="text-gray-500 hover:text-red-400 transition-colors flex-shrink-0">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
+                                        <div className="mt-2 flex items-center justify-between pl-1">
+                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                <div className="relative flex items-center">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={v.is_open_price ?? false}
+                                                        onChange={e => setVariant(i, 'is_open_price', e.target.checked)}
+                                                        className="peer sr-only"
+                                                    />
+                                                    <div className="w-8 h-4 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-orange-500"></div>
+                                                </div>
+                                                <span className="text-[10px] text-gray-400 group-hover:text-gray-300 font-medium">Es Variante de Monto Libre (Ignora Precio Base)</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

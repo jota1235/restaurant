@@ -33,6 +33,7 @@ class OrderController extends Controller
             ])
             ->forRestaurant($restaurantId)
             ->when($request->status,       fn($q) => $q->where('status', $request->status))
+            ->when($request->types,        fn($q) => $q->whereIn('type', explode(',', $request->types)))
             ->when($request->table_id,     fn($q) => $q->where('table_id', $request->table_id))
             ->when(!$request->include_closed, fn($q) => $q->active())
             ->orderByDesc('created_at');
@@ -77,6 +78,7 @@ class OrderController extends Controller
             'items.*.extras'             => ['sometimes', 'array'],
             'items.*.extras.*.extra_id'  => ['required', 'exists:extras,id'],
             'items.*.extras.*.quantity'  => ['sometimes', 'integer', 'min:1'],
+            'items.*.custom_price'       => ['sometimes', 'numeric', 'min:0'],
         ]);
 
         $order = DB::transaction(function () use ($request, $restaurantId) {
@@ -99,9 +101,16 @@ class OrderController extends Controller
                 $unitPrice = (float) $product->price;
 
                 // Add variant price modifier
+                // Add variant price modifier or use open price
                 if (!empty($itemData['product_variant_id'])) {
                     $variant = $product->variants()->find($itemData['product_variant_id']);
-                    if ($variant) $unitPrice += (float) $variant->price_modifier;
+                    if ($variant) {
+                        if ($variant->is_open_price && isset($itemData['custom_price'])) {
+                            $unitPrice = (float) $itemData['custom_price'];
+                        } else {
+                            $unitPrice += (float) $variant->price_modifier;
+                        }
+                    }
                 }
 
                 $qty     = $itemData['quantity'];
@@ -217,6 +226,7 @@ class OrderController extends Controller
             'items.*.extras'             => ['sometimes', 'array'],
             'items.*.extras.*.extra_id'  => ['required', 'exists:extras,id'],
             'items.*.extras.*.quantity'  => ['sometimes', 'integer', 'min:1'],
+            'items.*.custom_price'       => ['sometimes', 'numeric', 'min:0'],
         ]);
 
         DB::transaction(function () use ($request, $order) {
@@ -226,7 +236,13 @@ class OrderController extends Controller
 
                 if (!empty($itemData['product_variant_id'])) {
                     $variant = $product->variants()->find($itemData['product_variant_id']);
-                    if ($variant) $unitPrice += (float) $variant->price_modifier;
+                    if ($variant) {
+                        if ($variant->is_open_price && isset($itemData['custom_price'])) {
+                            $unitPrice = (float) $itemData['custom_price'];
+                        } else {
+                            $unitPrice += (float) $variant->price_modifier;
+                        }
+                    }
                 }
 
                 $qty     = $itemData['quantity'];
@@ -294,8 +310,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'Item no pertenece a la orden'], 422);
         }
 
-        if ($item->status !== 'pending') {
-            return response()->json(['message' => 'Solo se pueden eliminar productos pendientes (si están en preparación, solicite cancelación a gerencia)'], 422);
+        if (!in_array($item->status, ['pending', 'preparing'])) {
+            return response()->json(['message' => 'Solo se pueden eliminar productos pendientes o en preparación (si ya están listos, contacte a gerencia)'], 422);
         }
 
         $item->delete();

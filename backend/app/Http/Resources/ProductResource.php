@@ -28,6 +28,7 @@ class ProductResource extends JsonResource
                     'id'             => $v->id,
                     'name'           => $v->name,
                     'price_modifier' => (float) $v->price_modifier,
+                    'is_open_price'  => (bool) $v->is_open_price,
                     'is_active'      => $v->is_active,
                 ]);
             }),

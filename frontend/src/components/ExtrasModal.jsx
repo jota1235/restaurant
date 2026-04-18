@@ -7,6 +7,7 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
     const [selectedExtras, setSelectedExtras] = useState([]);
     const [quantity, setQuantity] = useState(1);
     const [notes, setNotes] = useState('');
+    const [customPrice, setCustomPrice] = useState('');
 
     const toggleExtra = (extra) => {
         setSelectedExtras(prev =>
@@ -17,17 +18,21 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
     };
 
     const handleConfirm = () => {
+        if (selectedVariant?.is_open_price && (!customPrice || Number(customPrice) <= 0)) {
+            return; // Could add an alert or error state here
+        }
         onConfirm({
             product,
             variant: selectedVariant,
             extras: selectedExtras,
             quantity,
-            notes
+            notes,
+            ...(selectedVariant?.is_open_price ? { custom_price: Number(customPrice) } : {})
         });
     };
 
-    const totalPrice = (product.price + (selectedVariant?.price_modifier || 0) +
-        selectedExtras.reduce((sum, e) => sum + e.price, 0)) * quantity;
+    const basePrice = selectedVariant?.is_open_price ? Number(customPrice || 0) : (product.price + (selectedVariant?.price_modifier || 0));
+    const totalPrice = (basePrice + selectedExtras.reduce((sum, e) => sum + e.price, 0)) * quantity;
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
@@ -62,15 +67,39 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
                                     >
                                         <div className="flex flex-col">
                                             <span>{v.name}</span>
-                                            {v.price_modifier !== 0 && (
+                                            {v.is_open_price ? (
+                                                <span className="text-[10px] opacity-70 italic text-orange-300">Precio Libre</span>
+                                            ) : (v.price_modifier !== 0 && (
                                                 <span className="text-[10px] opacity-70">
                                                     {v.price_modifier > 0 ? '+' : ''}${Math.abs(v.price_modifier).toFixed(2)}
                                                 </span>
-                                            )}
+                                            ))}
                                         </div>
                                     </button>
                                 ))}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Custom Price Input */}
+                    {selectedVariant?.is_open_price && (
+                        <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-4">
+                            <label className="block text-xs font-black text-orange-400 uppercase tracking-widest mb-3">Monto del cliente</label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400 font-bold text-xl">$</span>
+                                <input
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    step="0.01"
+                                    value={customPrice}
+                                    onChange={(e) => setCustomPrice(e.target.value)}
+                                    placeholder="0.00"
+                                    className="w-full bg-gray-950 border border-orange-500/50 rounded-xl py-3 pl-9 pr-4 text-white font-bold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                                    autoFocus
+                                />
+                            </div>
+                            <p className="text-[10px] text-orange-300/70 mt-2 leading-tight">Este monto sobreescribe el costo del producto para esta orden. Es obligatorio ingresar un número mayor a cero.</p>
                         </div>
                     )}
 
@@ -143,7 +172,8 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
 
                     <button
                         onClick={handleConfirm}
-                        className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98] uppercase text-xs tracking-wider"
+                        disabled={selectedVariant?.is_open_price && (!customPrice || Number(customPrice) <= 0)}
+                        className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-orange-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] uppercase text-xs tracking-wider"
                     >
                         AÑADIR A LA ORDEN
                     </button>

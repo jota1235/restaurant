@@ -44,6 +44,7 @@ class OrderResource extends JsonResource
                     'variant' => $item->relationLoaded('variant') && $item->variant ? [
                         'id'   => $item->variant->id,
                         'name' => $item->variant->name,
+                        'is_open_price' => (bool) $item->variant->is_open_price,
                     ] : null,
                     'extras' => $item->relationLoaded('extras')
                         ? $item->extras->map(fn($e) => [

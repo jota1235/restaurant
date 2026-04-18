@@ -28,13 +28,13 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                         /* Bold by default = more ink dots = darker on thermal */
-                        font-weight: 700 !important;
+                        font-weight: 900 !important;
                     }
 
                     body {
                         font-family: 'Courier New', Courier, monospace;
-                        font-size: 14px;
-                        line-height: 1.45;
+                        font-size: 16px;
+                        line-height: 1.4;
                         width: 80mm;
                         max-width: 80mm;
                         padding: 4mm 3mm;
@@ -48,16 +48,17 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                     /* ── Separator ── */
                     .sep {
                         border: none;
-                        border-top: 2px dashed #000000;
+                        border-top: 3px dashed #000000;
                         margin: 5px 0;
                     }
 
                     /* ── Items table ── */
                     table { width: 100%; border-collapse: collapse; }
                     td {
-                        padding: 2px 0;
+                        padding: 3px 0;
                         vertical-align: top;
-                        font-size: 13px;
+                        font-size: 15px;
+                        font-weight: 900 !important;
                     }
                     /* Space between qty and product name */
                     .col-qty {
@@ -69,9 +70,9 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                         width: 68px;
                     }
                     th {
-                        font-size: 12px;
+                        font-size: 14px;
                         padding-bottom: 4px;
-                        border-bottom: 2px solid #000000;
+                        border-bottom: 3px solid #000000;
                         text-align: left;
                     }
                     th.col-price { text-align: right; }
@@ -85,7 +86,7 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                         }
                         * {
                             color: #000000 !important;
-                            font-weight: 700 !important;
+                            font-weight: 900 !important;
                             -webkit-print-color-adjust: exact !important;
                             print-color-adjust: exact !important;
                         }
@@ -110,13 +111,13 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
     const r = ticketData.restaurant || {};
     const METHOD_LABELS = { cash: 'Efectivo', card: 'Tarjeta', transfer: 'Transferencia', other: 'Otro' };
 
-    // Inline styles — all 700 weight, pure black, no grays
+    // Inline styles — all 900 weight, pure black, no grays
     const s = {
-        wrap:   { fontFamily: "'Courier New', Courier, monospace", fontSize: '14px', color: '#000', fontWeight: '700', padding: '16px', lineHeight: 1.45 },
-        sep:    { borderTop: '2px dashed #000', margin: '6px 0' },
+        wrap:   { fontFamily: "'Courier New', Courier, monospace", fontSize: '16px', color: '#000', fontWeight: '900', padding: '16px', lineHeight: 1.4 },
+        sep:    { borderTop: '3px dashed #000', margin: '6px 0' },
         center: { textAlign: 'center' },
         bold:   { fontWeight: '900' },
-        small:  { fontSize: '12px', fontWeight: '700' },
+        small:  { fontSize: '14px', fontWeight: '900' },
         flex:   { display: 'flex', justifyContent: 'space-between' },
     };
 
@@ -146,10 +147,10 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                                     }}
                                 />
                             )}
-                            <div style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '1px' }}>
+                            <div style={{ fontSize: '22px', fontWeight: '900', letterSpacing: '1px' }}>
                                 {ticketData.is_pre_cuenta ? '*** PRE-CUENTA ***' : (r.name || 'Restaurante')}
                             </div>
-                            {ticketData.is_pre_cuenta && <div style={{ fontSize: '14px', fontWeight: '900' }}>{r.name || 'Restaurante'}</div>}
+                            {ticketData.is_pre_cuenta && <div style={{ fontSize: '16px', fontWeight: '900' }}>{r.name || 'Restaurante'}</div>}
                             {r.address && <div style={{ ...s.small }}>{r.address}</div>}
                             {r.city    && <div style={{ ...s.small }}>{r.city}</div>}
                             {r.phone   && <div style={{ ...s.small }}>Tel: {r.phone}</div>}
@@ -179,7 +180,7 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                                 <div style={s.small}>
                                     <div style={s.bold}>Datos del Cliente:</div>
                                     {ticketData.customer_name   && <div>Nombre: {ticketData.customer_name}</div>}
-                                    {ticketData.delivery_address && <div>Dir: {ticketData.delivery_address}</div>}
+                                    {ticketData.delivery_address && <div style={{ whiteSpace: 'pre-wrap' }}>Dir: {ticketData.delivery_address}</div>}
                                 </div>
                             </>
                         )}
@@ -189,7 +190,7 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                         {/* Items */}
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                                <tr style={{ fontSize: '12px', fontWeight: '900', borderBottom: '2px solid #000' }}>
+                                <tr style={{ fontSize: '14px', fontWeight: '900', borderBottom: '3px solid #000' }}>
                                     <td style={{ width: '28px', paddingRight: '4px', fontWeight: '900' }}>Qty</td>
                                     <td style={{ fontWeight: '900' }}>Producto</td>
                                     <td style={{ textAlign: 'right', width: '68px', fontWeight: '900' }}>Precio</td>
@@ -197,15 +198,15 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                             </thead>
                             <tbody>
                                 {ticketData.items?.map((item, i) => (
-                                    <tr key={i} style={{ fontSize: '13px', fontWeight: '700' }}>
+                                    <tr key={i} style={{ fontSize: '15px', fontWeight: '900' }}>
                                         <td style={{ verticalAlign: 'top', fontWeight: '900', paddingRight: '4px', width: '28px' }}>{item.quantity}</td>
                                         <td style={{ verticalAlign: 'top' }}>
                                             {item.name}
                                             {item.variant && (
-                                                <div style={{ fontSize: '12px', fontWeight: '700' }}>  {item.variant}</div>
+                                                <div style={{ fontSize: '14px', fontWeight: '900' }}>  {item.variant}</div>
                                             )}
                                             {item.extras?.length > 0 && (
-                                                <div style={{ fontSize: '12px', fontWeight: '700' }}>
+                                                <div style={{ fontSize: '14px', fontWeight: '900' }}>
                                                     {item.extras.map(e => `+${e}`).join(', ')}
                                                 </div>
                                             )}
@@ -220,21 +221,23 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
 
                         <div style={s.sep} />
 
+                        <div style={s.sep} />
+
                         {/* Totals */}
-                        <div style={{ ...s.flex, fontSize: '13px', fontWeight: '700' }}>
+                        <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
                             <span>Subtotal:</span><span>${ticketData.subtotal?.toFixed(2)}</span>
                         </div>
                         {ticketData.tax > 0 && (
-                        <div style={{ ...s.flex, fontSize: '13px', fontWeight: '700' }}>
+                        <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
                             <span>IVA:</span><span>${ticketData.tax?.toFixed(2)}</span>
                         </div>
                         )}
                         {ticketData.tip > 0 && (
-                            <div style={{ ...s.flex, fontSize: '13px', fontWeight: '700' }}>
+                            <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
                                 <span>Propina:</span><span>${ticketData.tip?.toFixed(2)}</span>
                             </div>
                         )}
-                        <div style={{ ...s.flex, fontSize: '17px', fontWeight: '900', marginTop: '4px' }}>
+                        <div style={{ ...s.flex, fontSize: '20px', fontWeight: '900', marginTop: '4px' }}>
                             <span>TOTAL:</span><span>${ticketData.grand_total?.toFixed(2)}</span>
                         </div>
 
@@ -242,7 +245,7 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
 
                         {/* Payment */}
                         {!ticketData.is_pre_cuenta && (
-                            <div style={{ fontSize: '13px', fontWeight: '700' }}>
+                            <div style={{ fontSize: '15px', fontWeight: '900' }}>
                                 <div><strong>Método:</strong> {METHOD_LABELS[ticketData.payment_method] || ticketData.payment_method}</div>
                                 {ticketData.payment_method === 'cash' && ticketData.amount_received > 0 && (
                                     <>
@@ -254,10 +257,10 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                             </div>
                         )}
 
-                        <div style={{ borderTop: '2px dashed #000', margin: '8px 0' }} />
+                        <div style={{ borderTop: '3px dashed #000', margin: '8px 0' }} />
 
                         {/* Footer */}
-                        <div style={{ textAlign: 'center', fontSize: '12px', fontWeight: '700' }}>
+                        <div style={{ textAlign: 'center', fontSize: '14px', fontWeight: '900' }}>
                             {ticketData.is_pre_cuenta ? (
                                 <div style={{ marginTop: '4px', fontSize: '11px' }}>
                                     <div>---</div>

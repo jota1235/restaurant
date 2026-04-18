@@ -13,6 +13,7 @@ export default function NewOrderPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const tableIdParam = searchParams.get('table_id');
+    const orderIdParam = searchParams.get('order_id');
 
     // Use current route path to detect caja context — more reliable than role checks
     const isCajaRoute = location.pathname.startsWith('/caja');
@@ -24,10 +25,8 @@ export default function NewOrderPage() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
-    // Order type: 'dine_in' | 'takeaway' — default takeaway when in caja
-    const [orderType, setOrderType] = useState(isCajaRoute ? 'takeaway' : 'dine_in');
-
     // Form State
+    const [orderType, setOrderType] = useState(orderIdParam ? 'takeaway' : (isCajaRoute ? 'takeaway' : 'dine_in'));
     const [selectedTable, setSelectedTable] = useState(tableIdParam || '');
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [selectedAddress, setSelectedAddress] = useState(null);
@@ -76,35 +75,52 @@ export default function NewOrderPage() {
     useEffect(() => { fetchInitialData(); }, [fetchInitialData]);
     useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-    const fetchActiveOrder = useCallback(async (tableId) => {
-        if (!tableId) {
+    const fetchActiveOrder = useCallback(async (tableId, directOrderId = null) => {
+        if (!tableId && !directOrderId) {
             setActiveOrderId(null);
             setExistingItems([]);
             return;
         }
         try {
-            const res = await ordersAPI.list({ table_id: tableId, include_closed: 0 });
-            const activeOrders = (res.data || []).filter(o => !['paid', 'cancelled'].includes(o.status));
-            if (activeOrders.length > 0) {
-                const order = activeOrders[0];
-                setActiveOrderId(order.id);
-                setExistingItems(order.items || []);
-                setActiveTab('cart');
+            if (directOrderId) {
+                const res = await ordersAPI.show(directOrderId);
+                const order = res.data;
+                if (order && !['paid', 'cancelled'].includes(order.status)) {
+                    setActiveOrderId(order.id);
+                    setExistingItems(order.items || []);
+                    setOrderType(order.type);
+                    if (order.table_id) setSelectedTable(order.table_id.toString());
+                    setActiveTab('cart');
+                } else {
+                    setActiveOrderId(null);
+                    setExistingItems([]);
+                }
             } else {
-                setActiveOrderId(null);
-                setExistingItems([]);
+                const res = await ordersAPI.list({ table_id: tableId, include_closed: 0 });
+                const activeOrders = (res.data || []).filter(o => !['paid', 'cancelled'].includes(o.status));
+                if (activeOrders.length > 0) {
+                    const order = activeOrders[0];
+                    setActiveOrderId(order.id);
+                    setExistingItems(order.items || []);
+                    setActiveTab('cart');
+                } else {
+                    setActiveOrderId(null);
+                    setExistingItems([]);
+                }
             }
         } catch (e) { console.error(e) }
     }, []);
 
     useEffect(() => {
-        if (orderType === 'dine_in') {
+        if (orderIdParam) {
+            fetchActiveOrder(null, orderIdParam);
+        } else if (orderType === 'dine_in') {
             fetchActiveOrder(selectedTable);
         } else {
             setActiveOrderId(null);
             setExistingItems([]);
         }
-    }, [selectedTable, orderType, fetchActiveOrder]);
+    }, [selectedTable, orderType, fetchActiveOrder, orderIdParam]);
 
     // Reset table when switching to takeaway
     const handleOrderTypeChange = (type) => {
@@ -138,6 +154,7 @@ export default function NewOrderPage() {
         const existingIndex = cart.findIndex(c =>
             c.product.id === item.product.id &&
             c.variant?.id === item.variant?.id &&
+            c.custom_price === item.custom_price &&
             JSON.stringify(c.extras.map(e => e.id).sort()) === JSON.stringify(item.extras.map(e => e.id).sort()) &&
             c.notes === item.notes
         );
@@ -162,8 +179,8 @@ export default function NewOrderPage() {
     };
 
     const calculateItemPrice = (item) => {
-        let price = item.product.price;
-        if (item.variant) price += item.variant.price_modifier;
+        let price = item.custom_price !== undefined ? item.custom_price : item.product.price;
+        if (item.variant && !item.variant.is_open_price) price += item.variant.price_modifier;
         price += item.extras.reduce((sum, e) => sum + e.price, 0);
         return price;
     };
@@ -191,7 +208,7 @@ export default function NewOrderPage() {
                 type: orderType,
                 customer_name: orderType === 'takeaway' ? selectedCustomer?.name : undefined,
                 delivery_address: orderType === 'takeaway' && selectedAddress 
-                                    ? `${selectedAddress.street} (${selectedAddress.references || ''})` 
+                                    ? `[${(selectedAddress.label || 'DOMICILIO').toUpperCase()}] ${selectedAddress.street}\nRef: ${selectedAddress.references || 'N/A'}\nTel: ${selectedCustomer?.phone || 'N/A'}` 
                                     : null,
                 notes: notes,
                 items: cart.map(item => ({
@@ -199,6 +216,7 @@ export default function NewOrderPage() {
                     product_variant_id: item.variant?.id || null,
                     quantity: item.quantity,
                     notes: item.notes,
+                    custom_price: item.custom_price,
                     extras: item.extras.map(e => ({
                         extra_id: e.id,
                         quantity: 1
@@ -462,7 +480,7 @@ export default function NewOrderPage() {
                                 </div>
                                 <div className="text-right flex flex-col items-end gap-1">
                                     <p className="text-[10px] text-gray-400 font-black">${parseFloat(item.subtotal).toFixed(2)}</p>
-                                    {item.status === 'pending' && (
+                                    {['pending', 'preparing'].includes(item.status) && (
                                         <button onClick={() => handleRemoveExistingItem(item.id)} className="text-red-400/40 hover:text-red-400 p-1 hover:bg-red-500/10 rounded-lg transition-all">
                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

@@ -57,6 +57,7 @@ class ProductController extends Controller
             'variants'     => 'sometimes|array',
             'variants.*.name'           => 'required|string|max:100',
             'variants.*.price_modifier' => 'required|numeric',
+            'variants.*.is_open_price'  => 'sometimes|boolean',
             'extras'       => 'sometimes|array',
             'extras.*'     => 'exists:extras,id',
         ]);

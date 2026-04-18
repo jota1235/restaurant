@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductVariant extends Model
 {
-    protected $fillable = ['product_id', 'name', 'price_modifier', 'is_active'];
+    protected $fillable = ['product_id', 'name', 'price_modifier', 'is_open_price', 'is_active'];
 
     protected function casts(): array
     {
         return [
             'price_modifier' => 'decimal:2',
+            'is_open_price'  => 'boolean',
             'is_active'      => 'boolean',
         ];
     }

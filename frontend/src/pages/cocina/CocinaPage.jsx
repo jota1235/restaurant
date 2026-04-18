@@ -221,7 +221,16 @@ export default function CocinaPage() {
                                                         {item.product.category.name}
                                                     </span>
                                                 )}
-                                                {item.variant && <p className="text-[10px] text-emerald-400 font-black uppercase tracking-widest mt-0.5">{item.variant.name}</p>}
+                                                {item.variant && (
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <p className="text-xs md:text-sm text-emerald-400 font-black uppercase tracking-widest">{item.variant.name}</p>
+                                                        {item.variant.is_open_price && (
+                                                            <span className="px-2 py-1 bg-yellow-500/15 text-yellow-400 font-black text-sm md:text-base uppercase rounded border border-yellow-500/30 shadow-md">
+                                                                X ${Number(item.unit_price).toFixed(0)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
                                                 {item.extras?.length > 0 && (
                                                     <div className="flex flex-wrap gap-1 mt-1">
                                                         {item.extras.map(e => (
