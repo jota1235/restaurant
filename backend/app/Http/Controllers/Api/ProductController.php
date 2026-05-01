@@ -159,10 +159,16 @@ class ProductController extends Controller
             $product->image = $request->file('image')->store('products', 'public');
         }
 
-        $product->update($request->only([
+        $data = $request->only([
             'category_id', 'name', 'description', 'price',
             'sort_order', 'is_available', 'is_active', 'promotion_type',
-        ]) + ($request->hasFile('image') ? ['image' => $product->image] : []));
+        ]);
+
+        if (isset($data['promotion_type']) && $data['promotion_type'] === '') {
+            $data['promotion_type'] = null;
+        }
+
+        $product->update($data + ($request->hasFile('image') ? ['image' => $product->image] : []));
 
         // Reemplazar variantes si se envían
         if ($request->has('variants')) {

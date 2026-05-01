@@ -11,13 +11,14 @@ export const categoriesAPI = {
 function buildProductFormData(data) {
     const fd = new FormData();
     Object.entries(data).forEach(([key, val]) => {
-        if (val === undefined || val === null) return;
+        if (val === undefined) return;
         if (key === 'image' && val instanceof File) {
             fd.append('image', val);
-        } else if (typeof val === 'object' && !(val instanceof File)) {
+        } else if (typeof val === 'object' && val !== null) {
             fd.append(key, JSON.stringify(val));
         } else {
-            fd.append(key, val);
+            // Send empty string for null values to ensure they are updated in backend
+            fd.append(key, val === null ? '' : val);
         }
     });
     return fd;
