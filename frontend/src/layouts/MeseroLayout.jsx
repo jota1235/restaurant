@@ -1,6 +1,8 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
 import useAuthStore from '../store/authStore';
 import BranchSwitcher from '../components/BranchSwitcher';
+import echo from '../api/echo';
 
 const navItems = [
     {
@@ -43,6 +45,78 @@ const navItems = [
 export default function MeseroLayout() {
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
+    const [bellNotification, setBellNotification] = useState(null);
+    const audioContextRef = useRef(null);
+
+    const playBell = () => {
+        try {
+            // Create context if it doesn't exist
+            if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            const audioCtx = audioContextRef.current;
+
+            // Important: Resume context if browser suspended it
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const playDing = (delay, freq) => {
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+                
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+                gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + delay + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 1.2);
+                
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                osc.start(audioCtx.currentTime + delay);
+                osc.stop(audioCtx.currentTime + delay + 1.2);
+            };
+            
+            // Triple High Pitch Chime (More piercing for noisy environments)
+            const now = audioCtx.currentTime;
+            playDing(0, 1567.98); // G6
+            playDing(0.12, 1567.98); // G6
+            playDing(0.24, 2093.00); // C7
+        } catch (e) {
+            console.error('Audio api error', e);
+        }
+    };
+
+    useEffect(() => {
+        // Try to resume audio context on any user interaction
+        const resumeAudio = () => {
+            if (audioContextRef.current?.state === 'suspended') {
+                audioContextRef.current.resume();
+            }
+        };
+        window.addEventListener('click', resumeAudio);
+        return () => window.removeEventListener('click', resumeAudio);
+    }, []);
+
+    useEffect(() => {
+        if (!user || !user.restaurant_id || !echo) return;
+
+        const channel = echo.private(`restaurant.${user.restaurant_id}`);
+        channel.listen('.order.bell', (e) => {
+            playBell();
+            setBellNotification(e.order_number);
+            
+            // Auto hide notification after 5s
+            setTimeout(() => setBellNotification(null), 5000);
+        });
+
+        return () => {
+            channel.stopListening('.order.bell');
+        };
+    }, [user]);
 
     const handleLogout = async () => {
         await logout();
@@ -109,7 +183,16 @@ export default function MeseroLayout() {
                 </div>
             </header>
 
-            <main className="flex-1 min-h-0 p-1.5 sm:p-2 md:p-4 lg:p-6 overflow-hidden">
+            <main className="flex-1 min-h-0 p-1.5 sm:p-2 md:p-4 lg:p-6 overflow-hidden relative">
+                {/* Bell Notification Popup */}
+                {bellNotification && (
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+                        <div className="bg-yellow-500 text-black px-6 py-3 rounded-full font-black flex items-center gap-3 shadow-2xl shadow-yellow-500/50 border-4 border-yellow-400">
+                            <span className="text-2xl animate-pulse">🔔</span>
+                            <span>¡PEDIDO #{bellNotification} LISTO EN COCINA!</span>
+                        </div>
+                    </div>
+                )}
                 <Outlet />
             </main>
         </div>

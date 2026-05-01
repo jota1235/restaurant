@@ -53,6 +53,7 @@ class ProductController extends Controller
             'price'        => 'required|numeric|min:0',
             'sort_order'   => 'sometimes|integer|min:0',
             'is_available' => 'sometimes',
+            'promotion_type' => 'nullable|in:2x1,3x2',
             'image'        => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:8192',
             'variants'     => 'sometimes|array',
             'variants.*.name'           => 'required|string|max:100',
@@ -85,6 +86,7 @@ class ProductController extends Controller
             'sort_order'    => $request->sort_order ?? 0,
             'is_available'  => $request->boolean('is_available', true),
             'is_active'     => true,
+            'promotion_type'=> $request->promotion_type,
         ]);
 
         // Crear variantes
@@ -142,6 +144,7 @@ class ProductController extends Controller
             'sort_order'   => 'sometimes|integer|min:0',
             'is_available' => 'sometimes',
             'is_active'    => 'sometimes',
+            'promotion_type' => 'nullable|in:2x1,3x2',
             'image'        => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:8192',
             'variants'     => 'sometimes',
             'extras'       => 'sometimes',
@@ -158,7 +161,7 @@ class ProductController extends Controller
 
         $product->update($request->only([
             'category_id', 'name', 'description', 'price',
-            'sort_order', 'is_available', 'is_active',
+            'sort_order', 'is_available', 'is_active', 'promotion_type',
         ]) + ($request->hasFile('image') ? ['image' => $product->image] : []));
 
         // Reemplazar variantes si se envían

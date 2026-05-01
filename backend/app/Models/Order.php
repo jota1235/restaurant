@@ -21,7 +21,7 @@ class Order extends Model
         'restaurant_id', 'table_id', 'user_id', 'customer_id',
         'order_number', 'status', 'type',
         'customer_name', 'delivery_address', 'notes',
-        'subtotal', 'tax', 'discount', 'total',
+        'subtotal', 'tax', 'discount', 'delivery_fee', 'total',
         'confirmed_at', 'ready_at', 'paid_at',
     ];
 
@@ -31,6 +31,7 @@ class Order extends Model
             'subtotal'     => 'decimal:2',
             'tax'          => 'decimal:2',
             'discount'     => 'decimal:2',
+            'delivery_fee' => 'decimal:2',
             'total'        => 'decimal:2',
             'confirmed_at' => 'datetime',
             'ready_at'     => 'datetime',
@@ -60,9 +61,9 @@ class Order extends Model
         $taxRate  = (float) ($this->restaurant->tax_rate ?? 0);
         $tax      = $taxRate > 0 ? round($subtotal * $taxRate, 2) : 0;
         $this->update([
-            'subtotal' => $subtotal,
-            'tax'      => $tax,
-            'total'    => $subtotal + $tax - $this->discount,
+            'subtotal'     => $subtotal,
+            'tax'          => $tax,
+            'total'        => $subtotal + $tax + ($this->delivery_fee ?? 0) - $this->discount,
         ]);
     }
 

@@ -8,6 +8,7 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
     const [quantity, setQuantity] = useState(1);
     const [notes, setNotes] = useState('');
     const [customPrice, setCustomPrice] = useState('');
+    const [applyPromo, setApplyPromo] = useState(false);
 
     const toggleExtra = (extra) => {
         setSelectedExtras(prev =>
@@ -27,6 +28,7 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
             extras: selectedExtras,
             quantity,
             notes,
+            promotion_type: applyPromo ? product.promotion_type : null,
             ...(selectedVariant?.is_open_price ? { custom_price: Number(customPrice) } : {})
         });
     };
@@ -148,6 +150,27 @@ export default function ExtrasModal({ product, onClose, onConfirm }) {
                             className="w-full bg-gray-900 border border-gray-800 rounded-2xl p-4 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50 min-h-[80px]"
                         />
                     </div>
+
+                    {/* Promoción */}
+                    {product.promotion_type && (
+                        <div 
+                            className={`p-4 rounded-2xl border flex justify-between items-center cursor-pointer transition-all select-none ${applyPromo ? 'bg-blue-500/10 border-blue-500/50' : 'bg-gray-900 border-gray-800 hover:border-gray-700'}`} 
+                            onClick={() => setApplyPromo(!applyPromo)}
+                        >
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg">🏷️</span>
+                                    <span className={`text-sm font-black uppercase tracking-widest ${applyPromo ? 'text-blue-400' : 'text-gray-400'}`}>Aplicar {product.promotion_type}</span>
+                                </div>
+                                <span className="text-[10px] text-gray-500 leading-tight mt-1 ml-7">
+                                    Activa esta opción para que se envíe como promoción a cocina.
+                                </span>
+                            </div>
+                            <div className={`w-11 h-6 rounded-full flex items-center px-1 transition-colors duration-200 ${applyPromo ? 'bg-blue-500' : 'bg-gray-700'}`}>
+                                <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${applyPromo ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer / Confirm */}

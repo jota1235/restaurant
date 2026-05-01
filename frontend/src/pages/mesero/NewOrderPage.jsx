@@ -143,10 +143,10 @@ export default function NewOrderPage() {
     };
 
     const handleProductClick = (product) => {
-        if (product.variants?.length > 0 || product.extras?.length > 0) {
+        if (product.variants?.length > 0 || product.extras?.length > 0 || product.promotion_type) {
             setModalProduct(product);
         } else {
-            addToCart({ product, variant: null, extras: [], quantity: 1, notes: '' });
+            addToCart({ product, variant: null, extras: [], quantity: 1, notes: '', promotion_type: null });
         }
     };
 
@@ -155,6 +155,7 @@ export default function NewOrderPage() {
             c.product.id === item.product.id &&
             c.variant?.id === item.variant?.id &&
             c.custom_price === item.custom_price &&
+            c.promotion_type === item.promotion_type &&
             JSON.stringify(c.extras.map(e => e.id).sort()) === JSON.stringify(item.extras.map(e => e.id).sort()) &&
             c.notes === item.notes
         );
@@ -183,6 +184,12 @@ export default function NewOrderPage() {
         if (item.variant && !item.variant.is_open_price) price += item.variant.price_modifier;
         price += item.extras.reduce((sum, e) => sum + e.price, 0);
         return price;
+    };
+
+    const getPhysicalQuantity = (billedQty, promoType) => {
+        if (promoType === '2x1') return billedQty * 2;
+        if (promoType === '3x2') return billedQty + Math.floor(billedQty / 2);
+        return billedQty;
     };
 
     const calculateTotal = () => {
@@ -214,9 +221,10 @@ export default function NewOrderPage() {
                 items: cart.map(item => ({
                     product_id: item.product.id,
                     product_variant_id: item.variant?.id || null,
-                    quantity: item.quantity,
+                    quantity: getPhysicalQuantity(item.quantity, item.promotion_type),
                     notes: item.notes,
                     custom_price: item.custom_price,
+                    promotion_type: item.promotion_type || null,
                     extras: item.extras.map(e => ({
                         extra_id: e.id,
                         quantity: 1
@@ -367,9 +375,16 @@ export default function NewOrderPage() {
                                 <h3 className="text-xs md:text-sm font-bold text-white line-clamp-1">{p.name}</h3>
                                 <div className="flex items-center justify-between mt-1">
                                     <p className="text-orange-400 font-black text-sm">${p.price}</p>
-                                    {(p.variants?.length > 0 || p.extras?.length > 0) && (
-                                        <span className="bg-orange-500 w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-sm">+</span>
-                                    )}
+                                    <div className="flex gap-1">
+                                        {p.promotion_type && (
+                                            <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 rounded-md flex items-center justify-center text-[9px] font-black shadow-sm uppercase">
+                                                {p.promotion_type}
+                                            </span>
+                                        )}
+                                        {(p.variants?.length > 0 || p.extras?.length > 0) && (
+                                            <span className="bg-orange-500 w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-black shadow-sm">+</span>
+                                        )}
+                                    </div>
                                 </div>
                             </button>
                         ))}
@@ -473,6 +488,7 @@ export default function NewOrderPage() {
                                             {item.status === 'pending' ? 'Pendiente' : (item.status === 'ready' ? 'Listo' : 'En Prep')}
                                         </span>
                                         {item.variant && <span className="text-[8px] font-black uppercase text-gray-400 bg-gray-900 px-1.5 py-0.5 rounded">{item.variant.name}</span>}
+                                        {item.promotion_type && <span className="text-[8px] font-black uppercase text-blue-400 bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 rounded">🏷️ {item.promotion_type}</span>}
                                         {item.extras?.map(e => (
                                             <span key={e.id} className="text-[8px] font-black uppercase text-emerald-400/50 bg-emerald-500/5 px-1.5 py-0.5 rounded">+ {e.extra?.name || 'Extra'}</span>
                                         ))}
@@ -513,6 +529,11 @@ export default function NewOrderPage() {
                                             {item.variant && (
                                                 <span className="text-[8px] font-black uppercase text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/15">
                                                     {item.variant.name}
+                                                </span>
+                                            )}
+                                            {item.promotion_type && (
+                                                <span className="text-[8px] font-black uppercase text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/15">
+                                                    🏷️ {item.promotion_type} (Cocina: {getPhysicalQuantity(item.quantity, item.promotion_type)})
                                                 </span>
                                             )}
                                             {item.extras.map(e => (

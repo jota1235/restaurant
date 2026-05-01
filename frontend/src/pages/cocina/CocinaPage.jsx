@@ -221,6 +221,11 @@ export default function CocinaPage() {
                                                         {item.product.category.name}
                                                     </span>
                                                 )}
+                                                {item.promotion_type && (
+                                                    <span className="inline-block text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/15 px-1.5 py-0.5 rounded mt-0.5 ml-1">
+                                                        🏷️ {item.promotion_type}
+                                                    </span>
+                                                )}
                                                 {item.variant && (
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <p className="text-xs md:text-sm text-emerald-400 font-black uppercase tracking-widest">{item.variant.name}</p>
@@ -266,10 +271,23 @@ export default function CocinaPage() {
                             </div>
 
                             {/* Card Footer */}
-                            <div className="p-3 md:p-4 bg-gray-950/50 border-t border-gray-800/50 flex-shrink-0">
+                            <div className="p-3 md:p-4 bg-gray-950/50 border-t border-gray-800/50 flex-shrink-0 grid grid-cols-4 gap-2">
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await ordersAPI.ringBell(order.id);
+                                        } catch (e) {
+                                            console.error('Error ringing bell:', e);
+                                        }
+                                    }}
+                                    className="col-span-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 text-yellow-400 font-black text-xl py-3.5 md:py-4 rounded-2xl transition-all active:scale-[0.95] flex items-center justify-center"
+                                    title="Tocar timbre al mesero"
+                                >
+                                    🔔
+                                </button>
                                 <button
                                     onClick={() => handleMarkReady(order.id)}
-                                    className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black text-xs py-3.5 md:py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98] uppercase tracking-widest"
+                                    className="col-span-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black text-xs py-3.5 md:py-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98] uppercase tracking-widest"
                                 >
                                     DESPACHAR TODO
                                 </button>

@@ -21,6 +21,7 @@ class Product extends Model
         'sort_order',
         'is_available',
         'is_active',
+        'promotion_type',
     ];
 
     protected function casts(): array

@@ -40,6 +40,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
         price: product?.price ?? '',
         category_id: product?.category?.id ?? categories[0]?.id ?? '',
         is_available: product?.is_available ?? true,
+        promotion_type: product?.promotion_type ?? '',
         variants: product?.variants?.map(v => ({ name: v.name, price_modifier: v.price_modifier, is_open_price: v.is_open_price ?? false })) ?? [],
         extras: product?.extras?.map(e => e.id) ?? [],
     });
@@ -249,15 +250,29 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
                         </select>
                     </div>
 
-                    {/* Description */}
-                    <div>
-                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Descripción</label>
-                        <textarea
-                            value={form.description} rows={2}
-                            onChange={e => set('description', e.target.value)}
-                            placeholder="Descripción del platillo…"
-                            className={`${inputCls()} resize-none`}
-                        />
+                    {/* Description and Promo */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="col-span-2 sm:col-span-1">
+                            <label className="block text-xs font-medium text-gray-400 mb-1.5">Descripción</label>
+                            <textarea
+                                value={form.description} rows={2}
+                                onChange={e => set('description', e.target.value)}
+                                placeholder="Descripción del platillo…"
+                                className={`${inputCls()} resize-none`}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-400 mb-1.5">Tipo de Promoción</label>
+                            <select
+                                value={form.promotion_type || ''}
+                                onChange={e => set('promotion_type', e.target.value || null)}
+                                className={inputCls(errors.promotion_type)}
+                            >
+                                <option value="" className="bg-gray-800">Ninguna</option>
+                                <option value="2x1" className="bg-gray-800">2x1</option>
+                                <option value="3x2" className="bg-gray-800">3x2</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Available toggle */}

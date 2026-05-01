@@ -125,8 +125,10 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         Route::middleware('role:superadmin,admin,mesero,cocina,caja')->group(function () {
             Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus']);
+            Route::patch('orders/{order}/delivery-fee', [OrderController::class, 'updateDeliveryFee']);
             Route::patch('orders/{order}/items/{item}/status', [OrderController::class, 'updateItemStatus']);
             Route::post('orders/{order}/mark-cook-items-ready', [OrderController::class, 'markCookItemsReady']);
+            Route::post('orders/{order}/ring-bell', [OrderController::class, 'ringBell']);
         });
 
         // ===== PAGOS (Caja, Admin) =====

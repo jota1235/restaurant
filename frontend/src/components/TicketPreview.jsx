@@ -232,6 +232,11 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                             <span>IVA:</span><span>${ticketData.tax?.toFixed(2)}</span>
                         </div>
                         )}
+                        {ticketData.delivery_fee > 0 && (
+                        <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
+                            <span>Envío:</span><span>${ticketData.delivery_fee?.toFixed(2)}</span>
+                        </div>
+                        )}
                         {ticketData.tip > 0 && (
                             <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
                                 <span>Propina:</span><span>${ticketData.tip?.toFixed(2)}</span>

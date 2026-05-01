@@ -19,6 +19,7 @@ class OrderResource extends JsonResource
             'subtotal'      => (float) $this->subtotal,
             'tax'           => (float) $this->tax,
             'discount'      => (float) $this->discount,
+            'delivery_fee'  => (float) $this->delivery_fee,
             'total'         => (float) $this->total,
             'table'         => $this->whenLoaded('table', fn() => [
                 'id'   => $this->table->id,
@@ -34,6 +35,8 @@ class OrderResource extends JsonResource
                     'id'         => $item->id,
                     'status'     => $item->status,
                     'quantity'   => $item->quantity,
+                    'billed_quantity' => $item->billed_quantity,
+                    'promotion_type' => $item->promotion_type,
                     'unit_price' => (float) $item->unit_price,
                     'subtotal'   => (float) $item->subtotal,
                     'notes'      => $item->notes,

@@ -11,6 +11,7 @@ use App\Models\Table;
 use App\Services\AuditLogger;
 use App\Events\OrderCreated;
 use App\Events\OrderStatusUpdated;
+use App\Events\OrderBellRung;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -74,6 +75,7 @@ class OrderController extends Controller
             'items.*.product_id'        => ['required', 'exists:products,id'],
             'items.*.product_variant_id' => ['nullable', 'exists:product_variants,id'],
             'items.*.quantity'           => ['required', 'integer', 'min:1'],
+            'items.*.promotion_type'     => ['nullable', Rule::in(['2x1', '3x2'])],
             'items.*.notes'              => ['nullable', 'string'],
             'items.*.extras'             => ['sometimes', 'array'],
             'items.*.extras.*.extra_id'  => ['required', 'exists:extras,id'],
@@ -114,7 +116,13 @@ class OrderController extends Controller
                 }
 
                 $qty     = $itemData['quantity'];
-                $itemSub = round($unitPrice * $qty, 2);
+                $promo   = $itemData['promotion_type'] ?? null;
+                
+                $billedQty = $qty;
+                if ($promo === '2x1') $billedQty = (int) ceil($qty / 2);
+                elseif ($promo === '3x2') $billedQty = (int) ceil($qty * 2 / 3);
+
+                $itemSub = round($unitPrice * $billedQty, 2);
 
                 $item = OrderItem::create([
                     'order_id'           => $order->id,
@@ -125,6 +133,7 @@ class OrderController extends Controller
                     'subtotal'           => $itemSub,
                     'notes'              => $itemData['notes'] ?? null,
                     'status'             => 'pending',
+                    'promotion_type'     => $promo,
                 ]);
 
                 // Extras
@@ -199,6 +208,7 @@ class OrderController extends Controller
             ])->all(),
             'subtotal' => (float) $order->subtotal,
             'tax' => (float) $order->tax,
+            'delivery_fee' => (float) $order->delivery_fee,
             'total' => (float) $order->total,
             'grand_total' => (float) $order->total,
         ];
@@ -222,6 +232,7 @@ class OrderController extends Controller
             'items.*.product_id'        => ['required', 'exists:products,id'],
             'items.*.product_variant_id' => ['nullable', 'exists:product_variants,id'],
             'items.*.quantity'           => ['required', 'integer', 'min:1'],
+            'items.*.promotion_type'     => ['nullable', Rule::in(['2x1', '3x2'])],
             'items.*.notes'              => ['nullable', 'string'],
             'items.*.extras'             => ['sometimes', 'array'],
             'items.*.extras.*.extra_id'  => ['required', 'exists:extras,id'],
@@ -246,7 +257,13 @@ class OrderController extends Controller
                 }
 
                 $qty     = $itemData['quantity'];
-                $itemSub = round($unitPrice * $qty, 2);
+                $promo   = $itemData['promotion_type'] ?? null;
+                
+                $billedQty = $qty;
+                if ($promo === '2x1') $billedQty = (int) ceil($qty / 2);
+                elseif ($promo === '3x2') $billedQty = (int) ceil($qty * 2 / 3);
+
+                $itemSub = round($unitPrice * $billedQty, 2);
 
                 $item = OrderItem::create([
                     'order_id'           => $order->id,
@@ -257,6 +274,7 @@ class OrderController extends Controller
                     'subtotal'           => $itemSub,
                     'notes'              => $itemData['notes'] ?? null,
                     'status'             => 'pending',
+                    'promotion_type'     => $promo,
                 ]);
 
                 $extrasSub = 0;
@@ -385,6 +403,37 @@ class OrderController extends Controller
         ]);
     }
 
+    // ── UPDATE DELIVERY FEE ────────────────────────────
+    public function updateDeliveryFee(Request $request, Order $order): JsonResponse
+    {
+        $this->authorizeTenant($request, $order->restaurant_id);
+
+        $request->validate([
+            'delivery_fee' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        if (in_array($order->status, [Order::STATUS_PAID, Order::STATUS_CANCELLED])) {
+            return response()->json(['message' => 'No se puede modificar una orden pagada o cancelada'], 422);
+        }
+
+        $order->update(['delivery_fee' => $request->delivery_fee]);
+        $order->recalculate();
+
+        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+
+        AuditLogger::log(
+            'order.delivery_fee_updated',
+            "Costo de envío actualizado a {$request->delivery_fee} en orden #{$order->order_number}",
+            ['order_id' => $order->id, 'delivery_fee' => $request->delivery_fee],
+            $order
+        );
+
+        return response()->json([
+            'message' => 'Costo de envío actualizado',
+            'data'    => new OrderResource($order->fresh(['table', 'items.product', 'items.variant', 'items.extras.extra'])),
+        ]);
+    }
+
     // ── UPDATE ITEM STATUS (para cocina) ───────────────
     public function updateItemStatus(Request $request, Order $order, OrderItem $item): JsonResponse
     {
@@ -435,6 +484,16 @@ class OrderController extends Controller
         }
 
         return response()->json(['message' => 'Tus ítems fueron marcados como completados']);
+    }
+
+    // ── RING BELL ───────────────────────────────────────
+    public function ringBell(Request $request, Order $order): JsonResponse
+    {
+        $this->authorizeTenant($request, $order->restaurant_id);
+        
+        broadcast(new OrderBellRung($order))->toOthers();
+
+        return response()->json(['message' => 'Timbre enviado']);
     }
 
     // ── CANCEL ─────────────────────────────────────────

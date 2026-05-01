@@ -13,6 +13,10 @@ export default function CajaPage() {
     const [processing, setProcessing] = useState(false);
     const [shiftStatus, setShiftStatus] = useState({ isOpen: false, shift: null });
 
+    // Delivery Fee Inline Edit State
+    const [isEditingDeliveryFee, setIsEditingDeliveryFee] = useState(false);
+    const [tempDeliveryFee, setTempDeliveryFee] = useState('');
+
     // Payment State
     const [showCreditModal, setShowCreditModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -119,6 +123,20 @@ export default function CajaPage() {
         } catch (e) {
             console.error(e);
             alert(e.response?.data?.message || 'Error al procesar el pago');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleUpdateDeliveryFee = async (fee) => {
+        setProcessing(true);
+        try {
+            const res = await ordersAPI.updateDeliveryFee(selectedOrder.id, fee);
+            setSelectedOrder(res.data);
+            fetchOrders();
+            setIsEditingDeliveryFee(false);
+        } catch (e) {
+            alert(e.response?.data?.message || 'Error al actualizar costo de envío');
         } finally {
             setProcessing(false);
         }
@@ -343,6 +361,11 @@ export default function CajaPage() {
                                         <div className="flex-1 min-w-0">
                                             <span className="text-sm font-bold text-white line-clamp-1">{item.product.name}</span>
                                             {item.variant && <p className="text-[9px] text-gray-500 uppercase font-bold tracking-widest mt-0.5">{item.variant.name}</p>}
+                                            {item.promotion_type && (
+                                                <span className="inline-block mt-0.5 text-[8px] font-black uppercase text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/15">
+                                                    🏷️ {item.promotion_type} (Cobro: {item.billed_quantity})
+                                                </span>
+                                            )}
                                             {item.extras?.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                                     {item.extras.map(e => (
@@ -371,6 +394,77 @@ export default function CajaPage() {
                                     <span>Impuestos</span>
                                     <span>${selectedOrder.tax.toFixed(2)}</span>
                                 </div>
+                                )}
+                                {(selectedOrder.type === 'takeaway' || selectedOrder.type === 'delivery') && (
+                                    <div className="flex justify-between items-center text-[10px] font-bold text-gray-600 uppercase tracking-widest min-h-[32px]">
+                                        <span>Costo de Envío</span>
+                                        {isEditingDeliveryFee ? (
+                                            <div className="flex items-center gap-1.5 bg-gray-900/80 p-1 rounded-xl border border-blue-500/30 ring-1 ring-blue-500/10 shadow-lg shadow-black/20">
+                                                <div className="relative flex items-center">
+                                                    <span className="absolute left-3 text-sm font-black text-gray-400">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={tempDeliveryFee}
+                                                        onChange={(e) => setTempDeliveryFee(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                handleUpdateDeliveryFee(parseFloat(tempDeliveryFee) || 0);
+                                                            } else if (e.key === 'Escape') {
+                                                                setIsEditingDeliveryFee(false);
+                                                            }
+                                                        }}
+                                                        autoFocus
+                                                        className="w-24 bg-transparent pl-7 pr-3 py-1.5 text-white text-sm font-black focus:outline-none placeholder:text-gray-600 text-right"
+                                                        placeholder="0.00"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-1 pr-1">
+                                                    <button
+                                                        onClick={() => handleUpdateDeliveryFee(parseFloat(tempDeliveryFee) || 0)}
+                                                        className="w-8 h-8 flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg shadow-md shadow-emerald-500/20 transition-all active:scale-95"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setIsEditingDeliveryFee(false)}
+                                                        className="w-8 h-8 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all active:scale-95"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : selectedOrder.delivery_fee > 0 ? (
+                                            <button
+                                                onClick={() => {
+                                                    setTempDeliveryFee(selectedOrder.delivery_fee);
+                                                    setIsEditingDeliveryFee(true);
+                                                }}
+                                                className="px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/20 hover:border-orange-500/40 rounded-xl transition-all cursor-pointer font-black text-xs flex items-center gap-1.5"
+                                            >
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                </svg>
+                                                ${parseFloat(selectedOrder.delivery_fee).toFixed(2)}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => {
+                                                    setTempDeliveryFee('');
+                                                    setIsEditingDeliveryFee(true);
+                                                }}
+                                                className="px-3 py-1.5 bg-gray-800/50 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-700 hover:border-gray-600 rounded-xl transition-all cursor-pointer font-bold text-[10px] flex items-center gap-1.5"
+                                            >
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                                Añadir Envío
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                             <div className="flex justify-between items-end pt-2 pb-1">
