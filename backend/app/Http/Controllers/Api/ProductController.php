@@ -150,6 +150,20 @@ class ProductController extends Controller
             'extras'       => 'sometimes',
         ]);
 
+        // Prepare update data
+        $fillData = $request->only([
+            'category_id', 'name', 'description', 'price',
+            'sort_order', 'is_available', 'is_active'
+        ]);
+
+        $product->fill($fillData);
+
+        // Explicitly handle promotion_type
+        if ($request->has('promotion_type')) {
+            $promo = $request->get('promotion_type');
+            $product->promotion_type = ($promo === '' || $promo === 'null') ? null : $promo;
+        }
+
         // Handle image upload
         if ($request->hasFile('image')) {
             // Delete old image
@@ -159,16 +173,7 @@ class ProductController extends Controller
             $product->image = $request->file('image')->store('products', 'public');
         }
 
-        $data = $request->only([
-            'category_id', 'name', 'description', 'price',
-            'sort_order', 'is_available', 'is_active', 'promotion_type',
-        ]);
-
-        if (isset($data['promotion_type']) && $data['promotion_type'] === '') {
-            $data['promotion_type'] = null;
-        }
-
-        $product->update($data + ($request->hasFile('image') ? ['image' => $product->image] : []));
+        $product->save();
 
         // Reemplazar variantes si se envían
         if ($request->has('variants')) {

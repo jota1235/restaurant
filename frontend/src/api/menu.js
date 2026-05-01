@@ -25,7 +25,7 @@ function buildProductFormData(data) {
 }
 
 export const productsAPI = {
-    list: (params) => api.get('/api/products', { params }).then(r => r.data),
+    list: (params) => api.get('/api/products', { params: { ...params, _t: Date.now() } }).then(r => r.data),
     show: (id) => api.get(`/api/products/${id}`).then(r => r.data),
     create: (data) => api.post('/api/products', buildProductFormData(data), {
         headers: { 'Content-Type': 'multipart/form-data' }
