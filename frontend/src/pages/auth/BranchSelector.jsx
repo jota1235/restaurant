@@ -80,10 +80,12 @@ export default function BranchSelector() {
                                     </svg>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="text-base md:text-lg font-black text-white truncate">{r.name}</h3>
+                                    <h3 className="text-base md:text-lg font-black text-white truncate">
+                                        <span>{r.name}</span>
+                                    </h3>
                                     {(r.address || r.city) && (
                                         <p className="text-xs text-gray-400 truncate">
-                                            {[r.address, r.city].filter(Boolean).join(' · ')}
+                                            <span>{[r.address, r.city].filter(Boolean).join(' · ')}</span>
                                         </p>
                                     )}
                                 </div>
