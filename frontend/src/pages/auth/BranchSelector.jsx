@@ -24,11 +24,24 @@ export default function BranchSelector() {
         const result = await selectBranch(restaurantId);
         if (result.success) {
             const roles = user?.roles || [];
-            const primaryRole = roles[0];
+            // Role can be a string or an object with a name property
+            const firstRole = roles[0];
+            const primaryRole = typeof firstRole === 'string' ? firstRole : firstRole?.name;
             const redirect = ROLE_REDIRECTS[primaryRole] || '/admin';
             navigate(redirect, { replace: true });
         }
     };
+
+    if (!restaurants || restaurants.length === 0) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4">
+                <div className="text-center">
+                    <p className="text-gray-400 mb-4">No tienes sucursales asignadas o tu sesión expiró.</p>
+                    <button onClick={() => navigate('/login')} className="text-orange-500 font-bold underline">Volver al Login</button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4">

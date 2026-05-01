@@ -3,14 +3,24 @@ import { authAPI } from '../api/auth';
 
 const useAuthStore = create((set, get) => ({
     // Estado
-    user: JSON.parse(localStorage.getItem('user')) || null,
+    // Estado con persistencia segura
+    user: (() => {
+        try {
+            const stored = localStorage.getItem('user');
+            return (stored && stored !== 'undefined') ? JSON.parse(stored) : null;
+        } catch (e) { return null; }
+    })(),
     token: localStorage.getItem('auth_token') || null,
     isAuthenticated: !!localStorage.getItem('auth_token'),
     loading: false,
     error: null,
 
-    // Multi-branch state
-    restaurants: JSON.parse(localStorage.getItem('restaurants')) || [],
+    restaurants: (() => {
+        try {
+            const stored = localStorage.getItem('restaurants');
+            return (stored && stored !== 'undefined') ? JSON.parse(stored) : [];
+        } catch (e) { return []; }
+    })(),
     activeRestaurantId: localStorage.getItem('active_restaurant_id') || null,
     requiresBranchSelection: localStorage.getItem('requires_branch_selection') === 'true',
 

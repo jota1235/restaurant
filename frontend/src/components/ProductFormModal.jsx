@@ -105,15 +105,22 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
             };
             if (editing) {
                 await productsAPI.update(product.id, payload);
+                alert('¡Producto actualizado con éxito!');
             } else {
                 await productsAPI.create(payload);
+                alert('¡Producto creado con éxito!');
             }
             onSaved();
         } catch (err) {
+            console.error("Error saving product:", err);
             if (err.response?.status === 422) {
                 setErrors(err.response.data.errors ?? {});
+            } else if (err.response?.status === 403) {
+                setErrors({ _global: 'No tienes permisos para editar este producto (403)' });
+            } else if (err.response?.status === 500) {
+                setErrors({ _global: 'Error interno del servidor (500). Verifica la base de datos.' });
             } else {
-                setErrors({ _global: err.response?.data?.message ?? 'Error inesperado' });
+                setErrors({ _global: err.response?.data?.message ?? `Error: ${err.message}` });
             }
         } finally { setLoading(false); }
     };
