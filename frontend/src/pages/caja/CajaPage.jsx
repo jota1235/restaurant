@@ -36,9 +36,16 @@ export default function CajaPage() {
     const fetchOrders = useCallback(async () => {
         try {
             const res = await ordersAPI.list({ include_closed: 0 });
-            setOrders(res.data.filter(o => ['ready', 'delivered', 'confirmed'].includes(o.status)));
+            if (res && Array.isArray(res.data)) {
+                setOrders(res.data.filter(o => ['ready', 'delivered', 'confirmed'].includes(o?.status)));
+            } else if (res && Array.isArray(res)) {
+                setOrders(res.filter(o => ['ready', 'delivered', 'confirmed'].includes(o?.status)));
+            }
+            
+            const regRes = await paymentAPI.getRegisterStatus();
+            setShiftStatus(regRes?.data || { isOpen: false, shift: null });
         } catch (e) {
-            console.error(e);
+            console.error("Error loading Caja data:", e);
         } finally {
             setLoading(false);
         }
@@ -47,9 +54,11 @@ export default function CajaPage() {
     const fetchShiftStatus = useCallback(async () => {
         try {
             const res = await paymentAPI.getRegisterStatus();
-            setShiftStatus(res.data);
+            if (res?.data) {
+                setShiftStatus(res.data);
+            }
         } catch (e) {
-            console.error(e);
+            console.error("Error loading register status:", e);
         }
     }, []);
 
@@ -132,8 +141,11 @@ export default function CajaPage() {
         setProcessing(true);
         try {
             const res = await ordersAPI.updateDeliveryFee(selectedOrder.id, fee);
-            setSelectedOrder(res.data);
-            fetchOrders();
+            const updatedOrder = res?.data || res;
+            if (updatedOrder && updatedOrder.id) {
+                setSelectedOrder(updatedOrder);
+                setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+            }
             setIsEditingDeliveryFee(false);
         } catch (e) {
             alert(e.response?.data?.message || 'Error al actualizar costo de envío');
@@ -165,8 +177,8 @@ export default function CajaPage() {
         if (selectedOrder) setShowTicket(true);
     }, [selectedOrder]);
 
-    const totalWithTip = selectedOrder ? selectedOrder.total + paymentData.tip : 0;
-    const changeAmount = paymentData.method === 'cash' ? Math.max(0, paymentData.received - totalWithTip) : 0;
+    const totalWithTip = selectedOrder ? (Number(selectedOrder.total) || 0) + (Number(paymentData.tip) || 0) : 0;
+    const changeAmount = paymentData.method === 'cash' ? Math.max(0, (Number(paymentData.received) || 0) - totalWithTip) : 0;
 
     // Skeleton Loading
     if (loading && orders.length === 0) return (
@@ -186,8 +198,8 @@ export default function CajaPage() {
     return (
         <div className="flex h-full gap-6 relative overflow-hidden">
             {/* ═══════════════ ORDERS LIST ═══════════════ */}
-            <div className={`flex-1 flex flex-col min-w-0 ${showTicket && 'hidden xl:flex'}`}>
-                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className={`flex-1 flex flex-col min-w-0 bg-gray-900/20 rounded-3xl border border-gray-800/40 overflow-hidden ${showTicket && 'hidden xl:flex'}`}>
+                <div className="mb-6 p-6 pb-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
                             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +212,6 @@ export default function CajaPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        {/* Registrar crédito */}
                         <button
                             onClick={() => setShowCreditModal(true)}
                             className="flex items-center gap-2 px-3 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 hover:border-yellow-500/40 text-yellow-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
@@ -208,7 +219,6 @@ export default function CajaPage() {
                             <span className="text-sm">💳</span>
                             <span className="hidden sm:inline">Crédito</span>
                         </button>
-                        {/* Nueva orden a domicilio */}
                         <button
                             onClick={() => navigate('/caja/orden')}
                             className="flex items-center gap-2 px-3 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 hover:border-orange-500/40 text-orange-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
@@ -216,7 +226,6 @@ export default function CajaPage() {
                             <span className="text-sm">📞</span>
                             <span className="hidden sm:inline">Nueva orden</span>
                         </button>
-                        {/* Shift indicator */}
                         <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest ${
                             shiftStatus.isOpen
                                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
@@ -239,7 +248,7 @@ export default function CajaPage() {
                         <p className="text-gray-700 text-xs">Las órdenes listas aparecerán aquí automáticamente</p>
                     </div>
                 ) : (
-                    <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-20 sm:pb-6 scrollbar-none">
+                    <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 pb-20 sm:pb-6 scrollbar-none">
                         {orders.map(order => (
                             <button
                                 key={order.id}
@@ -314,8 +323,8 @@ export default function CajaPage() {
             `} onClick={() => setShowTicket(false)} />
 
             <div className={`
-                fixed inset-y-0 right-0 z-50 w-[90%] sm:w-[400px] bg-gray-950 border-l border-gray-800/60 shadow-2xl transition-transform duration-300 transform
-                xl:static xl:w-96 xl:translate-x-0 xl:rounded-3xl xl:flex xl:border xl:border-gray-800/50
+                fixed inset-y-0 right-0 z-50 w-[95%] sm:w-[420px] bg-gray-950 border-l border-gray-800/60 shadow-2xl transition-transform duration-300 transform
+                xl:static xl:w-[400px] xl:translate-x-0 xl:rounded-3xl xl:flex xl:border xl:border-gray-800/50
                 ${showTicket && selectedOrder ? 'translate-x-0' : 'translate-x-full'}
                 flex flex-col overflow-hidden
             `}>
@@ -345,14 +354,14 @@ export default function CajaPage() {
                         </div>
 
                         {/* Items List */}
-                        <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-3 scrollbar-none">
+                        <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-none">
                             <div className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
                                 Consumo
                             </div>
-                            {selectedOrder.items.map(item => (
+                            {(selectedOrder.items || []).map(item => (
                                 <div key={item.id} className="flex justify-between gap-3 p-3 bg-gray-900/30 rounded-2xl border border-gray-800/30">
                                     <div className="flex gap-3 flex-1 min-w-0">
                                         <span className="w-7 h-7 flex-shrink-0 bg-blue-500/10 border border-blue-500/15 rounded-lg flex items-center justify-center text-[11px] font-black text-blue-400">

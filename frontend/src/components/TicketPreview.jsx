@@ -212,7 +212,7 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                                             )}
                                         </td>
                                         <td style={{ textAlign: 'right', verticalAlign: 'top', fontWeight: '900' }}>
-                                            ${item.subtotal.toFixed(2)}
+                                            ${(Number(item.subtotal) || 0).toFixed(2)}
                                         </td>
                                     </tr>
                                 ))}
@@ -221,29 +221,22 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
 
                         <div style={s.sep} />
 
-                        <div style={s.sep} />
-
                         {/* Totals */}
                         <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
-                            <span>Subtotal:</span><span>${ticketData.subtotal?.toFixed(2)}</span>
+                            <span>Subtotal:</span><span>${(Number(ticketData.subtotal) || 0).toFixed(2)}</span>
                         </div>
-                        {ticketData.tax > 0 && (
-                        <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
-                            <span>IVA:</span><span>${ticketData.tax?.toFixed(2)}</span>
-                        </div>
-                        )}
-                        {ticketData.delivery_fee > 0 && (
-                        <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
-                            <span>Envío:</span><span>${ticketData.delivery_fee?.toFixed(2)}</span>
-                        </div>
-                        )}
-                        {ticketData.tip > 0 && (
+                        {Number(ticketData.tax) > 0 && (
                             <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
-                                <span>Propina:</span><span>${ticketData.tip?.toFixed(2)}</span>
+                                <span>IVA:</span><span>${(Number(ticketData.tax) || 0).toFixed(2)}</span>
+                            </div>
+                        )}
+                        {Number(ticketData.delivery_fee) > 0 && (
+                            <div style={{ ...s.flex, fontSize: '15px', fontWeight: '900' }}>
+                                <span>Envío:</span><span>${(Number(ticketData.delivery_fee) || 0).toFixed(2)}</span>
                             </div>
                         )}
                         <div style={{ ...s.flex, fontSize: '20px', fontWeight: '900', marginTop: '4px' }}>
-                            <span>TOTAL:</span><span>${ticketData.grand_total?.toFixed(2)}</span>
+                            <span>TOTAL:</span><span>${(Number(ticketData.total || ticketData.grand_total) || 0).toFixed(2)}</span>
                         </div>
 
                         <div style={s.sep} />
@@ -252,10 +245,10 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                         {!ticketData.is_pre_cuenta && (
                             <div style={{ fontSize: '15px', fontWeight: '900' }}>
                                 <div><strong>Método:</strong> {METHOD_LABELS[ticketData.payment_method] || ticketData.payment_method}</div>
-                                {ticketData.payment_method === 'cash' && ticketData.amount_received > 0 && (
+                                {ticketData.payment_method === 'cash' && Number(ticketData.amount_received) > 0 && (
                                     <>
-                                        <div>Recibido: ${ticketData.amount_received?.toFixed(2)}</div>
-                                        <div>Cambio: ${ticketData.change_amount?.toFixed(2)}</div>
+                                        <div>Recibido: ${(Number(ticketData.amount_received) || 0).toFixed(2)}</div>
+                                        <div>Cambio: ${(Number(ticketData.change_amount) || 0).toFixed(2)}</div>
                                     </>
                                 )}
                                 {ticketData.reference && <div>Ref: {ticketData.reference}</div>}
