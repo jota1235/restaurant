@@ -16,9 +16,9 @@ export default function MenuPage() {
 
     const fetchCategories = useCallback(async () => {
         try {
-            const data = await categoriesAPI.list();
-            setCategories(data.data);
-        } catch (e) { console.error(e); }
+            const res = await categoriesAPI.list();
+            setCategories(Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
+        } catch (e) { console.error("Error fetching categories:", e); }
     }, []);
 
     const fetchProducts = useCallback(async () => {
@@ -28,9 +28,9 @@ export default function MenuPage() {
                 category_id: activeCat ?? undefined,
                 search: search || undefined,
             };
-            const data = await productsAPI.list(params);
-            setProducts(data.data);
-        } catch (e) { console.error(e); }
+            const res = await productsAPI.list(params);
+            setProducts(Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
+        } catch (e) { console.error("Error fetching products:", e); }
         finally { setLoading(false); }
     }, [activeCat, search]);
 
@@ -97,7 +97,7 @@ export default function MenuPage() {
                     >
                         Todos
                     </button>
-                    {categories.map((cat) => (
+                    {(categories || []).map((cat) => (
                         <button
                             key={cat.id}
                             onClick={() => setActiveCat(cat.id)}
@@ -146,7 +146,7 @@ export default function MenuPage() {
                         Todos los productos
                     </button>
 
-                    {categories.map((cat) => (
+                    {(categories || []).map((cat) => (
                         <div key={cat.id} className="group flex items-center gap-1">
                             <button
                                 onClick={() => setActiveCat(cat.id)}
@@ -248,9 +248,9 @@ export default function MenuPage() {
                     </div>
                 ) : (
                     <div className="grid gap-2.5 md:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {products.map((p) => (
+                        {(products || []).map((p) => (
                             <ProductCard
-                                key={p.id}
+                                key={p?.id || Math.random()}
                                 product={p}
                                 onEdit={() => setProductModal({ open: true, product: p })}
                                 onDelete={() => handleDeleteProduct(p)}
