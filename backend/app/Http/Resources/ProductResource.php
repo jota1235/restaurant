@@ -19,7 +19,7 @@ class ProductResource extends JsonResource
             'sort_order'   => $this->sort_order,
             'is_available' => $this->is_available,
             'is_active'    => $this->is_active,
-            'promotion_type' => $this->promotion_type,
+            'promotion_type' => $this->promotion_type, // Forzar actualización
             'category'     => $this->whenLoaded('category', fn() => [
                 'id'   => $this->category->id,
                 'name' => $this->category->name,
