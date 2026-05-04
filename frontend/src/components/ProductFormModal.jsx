@@ -105,10 +105,10 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
             };
             if (editing) {
                 const res = await productsAPI.update(product.id, payload);
-                alert(`DEBUG: Enviado promotion_type='${payload.promotion_type}'. Respuesta COMPLETA:\n\n${JSON.stringify(res, null, 2)}`);
+                alert(`DEBUG: URL API=${api.defaults.baseURL}\n\nRespuesta COMPLETA:\n${JSON.stringify(res, null, 2)}`);
             } else {
                 const res = await productsAPI.create(payload);
-                alert(`DEBUG: Enviado promotion_type='${payload.promotion_type}'. Respuesta COMPLETA:\n\n${JSON.stringify(res, null, 2)}`);
+                alert(`DEBUG: URL API=${api.defaults.baseURL}\n\nRespuesta COMPLETA:\n${JSON.stringify(res, null, 2)}`);
             }
             onSaved();
         } catch (err) {
