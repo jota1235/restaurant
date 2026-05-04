@@ -104,11 +104,11 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
                 ...(imageFile ? { image: imageFile } : {}),
             };
             if (editing) {
-                await productsAPI.update(product.id, payload);
-                alert('¡Producto actualizado con éxito!');
+                const res = await productsAPI.update(product.id, payload);
+                alert(`DEBUG: Enviado promotion_type='${payload.promotion_type}'. Servidor devolvió promotion_type='${res.data?.promotion_type}'`);
             } else {
-                await productsAPI.create(payload);
-                alert('¡Producto creado con éxito!');
+                const res = await productsAPI.create(payload);
+                alert(`DEBUG: Enviado promotion_type='${payload.promotion_type}'. Servidor devolvió promotion_type='${res.data?.promotion_type}'`);
             }
             onSaved();
         } catch (err) {
