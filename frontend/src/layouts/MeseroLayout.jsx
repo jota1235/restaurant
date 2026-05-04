@@ -91,14 +91,30 @@ export default function MeseroLayout() {
     };
 
     useEffect(() => {
-        // Try to resume audio context on any user interaction
-        const resumeAudio = () => {
-            if (audioContextRef.current?.state === 'suspended') {
-                audioContextRef.current.resume();
+        // Eagerly initialize and unlock AudioContext on first user interaction (fixes iOS/Android autoplay policy)
+        const initAudio = () => {
+            try {
+                if (!audioContextRef.current) {
+                    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Play a silent buffer to definitively unlock audio on iOS Safari
+                    const buffer = audioContextRef.current.createBuffer(1, 1, 22050);
+                    const source = audioContextRef.current.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(audioContextRef.current.destination);
+                    source.start(0);
+                }
+                if (audioContextRef.current.state === 'suspended') {
+                    audioContextRef.current.resume();
+                }
+            } catch (e) {
+                console.error("Audio unlock failed", e);
             }
         };
-        window.addEventListener('click', resumeAudio);
-        return () => window.removeEventListener('click', resumeAudio);
+
+        const events = ['click', 'touchstart', 'keydown', 'pointerdown'];
+        events.forEach(e => window.addEventListener(e, initAudio));
+        return () => events.forEach(e => window.removeEventListener(e, initAudio));
     }, []);
 
     useEffect(() => {
