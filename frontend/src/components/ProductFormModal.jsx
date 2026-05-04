@@ -104,11 +104,9 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
                 ...(imageFile ? { image: imageFile } : {}),
             };
             if (editing) {
-                const res = await productsAPI.update(product.id, payload);
-                alert(`DEBUG: URL API=${api.defaults.baseURL}\n\nRespuesta COMPLETA:\n${JSON.stringify(res, null, 2)}`);
+                await productsAPI.update(product.id, payload);
             } else {
-                const res = await productsAPI.create(payload);
-                alert(`DEBUG: URL API=${api.defaults.baseURL}\n\nRespuesta COMPLETA:\n${JSON.stringify(res, null, 2)}`);
+                await productsAPI.create(payload);
             }
             onSaved();
         } catch (err) {

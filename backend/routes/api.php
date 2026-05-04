@@ -25,18 +25,6 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
-// RUTA DE EMERGENCIA PARA LIMPIAR CACHE Y PROBAR CONEXION
-Route::get('/debug-ping', function () {
-    if (function_exists('opcache_reset')) {
-        opcache_reset();
-    }
-    return response()->json([
-        'status' => 'OK',
-        'message' => 'OPcache cleared and connected to the correct server!',
-        'time' => now()->toDateTimeString(),
-    ]);
-});
-
 // ========== Rutas Protegidas (Requieren Autenticación) ==========
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
