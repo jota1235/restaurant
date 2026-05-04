@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import paymentAPI from '../../services/paymentAPI';
+import CashRegisterTicket from '../../components/CashRegisterTicket';
 
 export default function CashRegisterControl() {
     const [status, setStatus] = useState({ isOpen: false, shift: null });
@@ -9,6 +10,7 @@ export default function CashRegisterControl() {
     const [activeTab, setActiveTab] = useState('current'); // 'current', 'history'
     
     const [showMovementModal, setShowMovementModal] = useState(false);
+    const [showPrintModal, setShowPrintModal] = useState(false);
     const [movements, setMovements] = useState([]);
 
     // Forms
@@ -68,6 +70,11 @@ export default function CashRegisterControl() {
         if (!window.confirm('¿Seguro que desea cerrar la caja con estos montos?')) return;
         try {
             await paymentAPI.closeRegister(closeForm);
+            // Refresh summary one last time to get the final state with difference, etc.
+            const sumRes = await paymentAPI.getRegisterSummary();
+            setSummary(sumRes.data);
+            setShowPrintModal(true);
+            
             await fetchStatus();
             await fetchHistory();
             setActiveTab('history');
@@ -329,14 +336,27 @@ export default function CashRegisterControl() {
                                     </p>
                                 </div>
 
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPrintModal(true)}
+                                    className="w-full py-5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-black rounded-2xl uppercase text-xs tracking-[0.2em] transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 border border-gray-700/50"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Vista Previa
+                                </button>
                                 <button className="w-full py-5 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/20 hover:border-red-500 font-black rounded-2xl uppercase text-xs tracking-[0.2em] transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
-                                    Cerrar Turno y Guardar Historial
+                                    Cerrar Turno
                                 </button>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
+                    </div>
 
                         {/* Recent Movements */}
                         <div className="bg-gray-900/20 border border-gray-800/40 rounded-3xl p-6 sm:p-8">
@@ -389,13 +409,11 @@ export default function CashRegisterControl() {
                                 Resumen de Ventas
                             </h3>
 
-                            {/* Opening Balance */}
                             <div className="flex justify-between items-center p-3 bg-gray-950/30 rounded-xl">
                                 <span className="text-[11px] font-bold text-gray-400">Fondo Inicial</span>
                                 <span className="text-white font-black">${parseFloat(status.shift.opening_balance).toFixed(2)}</span>
                             </div>
 
-                            {/* Sales breakdown */}
                             {summary ? (
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center p-3 bg-emerald-500/[0.04] rounded-xl border border-emerald-500/10">
@@ -421,7 +439,6 @@ export default function CashRegisterControl() {
 
                             <div className="h-px bg-gray-800/50" />
 
-                            {/* Entries */}
                             <div className="flex justify-between items-center p-3 rounded-xl">
                                 <div className="flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-blue-400" />
@@ -430,7 +447,6 @@ export default function CashRegisterControl() {
                                 <span className="font-black text-blue-400">+${totalIn.toFixed(2)}</span>
                             </div>
 
-                            {/* Exits */}
                             <div className="flex justify-between items-center p-3 rounded-xl">
                                 <div className="flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-red-400" />
@@ -441,7 +457,6 @@ export default function CashRegisterControl() {
 
                             <div className="h-px bg-gray-800/50" />
 
-                            {/* Net Expected */}
                             {summary && (
                                 <div className="flex justify-between items-center p-4 bg-emerald-500/[0.06] rounded-2xl border border-emerald-500/10">
                                     <span className="text-[11px] font-black text-emerald-400/80 uppercase tracking-wider">Flujo Efectivo Total</span>
@@ -452,7 +467,6 @@ export default function CashRegisterControl() {
                             )}
                         </div>
 
-                        {/* Tip Card */}
                         <div className="p-6 bg-gradient-to-br from-indigo-500/[0.05] to-blue-500/[0.05] border border-indigo-500/10 rounded-3xl text-center">
                             <div className="w-8 h-8 bg-indigo-500/10 rounded-xl mx-auto flex items-center justify-center mb-3">
                                 <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,7 +486,6 @@ export default function CashRegisterControl() {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={() => setShowMovementModal(false)} />
                     <div className="relative w-full max-w-md bg-gray-950 border border-gray-800/60 rounded-3xl overflow-hidden shadow-2xl shadow-black/50">
-                        {/* Modal Header */}
                         <div className="p-6 border-b border-gray-800/50 bg-gray-900/30">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-black text-white tracking-tight">Nuevo Movimiento</h3>
@@ -488,7 +501,6 @@ export default function CashRegisterControl() {
                         </div>
 
                         <form onSubmit={handleMovement} className="p-6 space-y-5">
-                            {/* Type Selector */}
                             <div className="grid grid-cols-2 gap-2 p-1 bg-gray-900/50 rounded-2xl border border-gray-800/50">
                                 <button
                                     type="button"
@@ -518,7 +530,6 @@ export default function CashRegisterControl() {
                                 </button>
                             </div>
 
-                            {/* Amount */}
                             <div>
                                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Monto</label>
                                 <div className="relative">
@@ -536,7 +547,6 @@ export default function CashRegisterControl() {
                                 </div>
                             </div>
 
-                            {/* Reason */}
                             <div>
                                 <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">Motivo / Concepto</label>
                                 <input
@@ -549,7 +559,6 @@ export default function CashRegisterControl() {
                                 />
                             </div>
 
-                            {/* Actions */}
                             <div className="flex gap-3 pt-3">
                                 <button
                                     type="button"
@@ -565,6 +574,14 @@ export default function CashRegisterControl() {
                         </form>
                     </div>
                 </div>
+            )}
+            
+            {/* ═══════════════ PRINT MODAL ═══════════════ */}
+            {showPrintModal && summary && (
+                <CashRegisterTicket
+                    data={summary}
+                    onClose={() => setShowPrintModal(false)}
+                />
             )}
         </div>
     );

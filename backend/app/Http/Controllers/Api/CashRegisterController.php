@@ -109,6 +109,7 @@ class CashRegisterController extends Controller
         $expectedBalance = $shift->opening_balance + $cashPayments + $inMovements - $outMovements;
         $difference = $request->closing_balance - $expectedBalance;
 
+        // Calculate final status
         $shift->update([
             'closing_balance' => $request->closing_balance,
             'expected_balance' => $expectedBalance,
@@ -125,9 +126,59 @@ class CashRegisterController extends Controller
             $shift
         );
 
+        // Return same data as summary for the final ticket
+        return $this->summaryByShift($shift);
+    }
+
+    /**
+     * Helper to get summary by shift object
+     */
+    private function summaryByShift($shift)
+    {
+        $restaurantId = $shift->restaurant_id;
+        
+        // Calculate sales by payment method
+        $paymentTotals = Payment::where('cash_register_id', $shift->id)
+            ->where('status', 'completed')
+            ->selectRaw('payment_method, sum(amount) as total')
+            ->groupBy('payment_method')
+            ->pluck('total', 'payment_method');
+
+        $cashSales = (float) ($paymentTotals['cash'] ?? 0);
+        $cardSales = (float) ($paymentTotals['card'] ?? 0);
+        $transferSales = (float) ($paymentTotals['transfer'] ?? 0);
+        $otherSales = (float) ($paymentTotals['other'] ?? 0);
+        $totalSales = $cashSales + $cardSales + $transferSales + $otherSales;
+
+        // Detailed movements
+        $movements = CashMovement::where('cash_register_id', $shift->id)
+            ->with('user:id,name')
+            ->get();
+
+        $inMovementsSum = $movements->where('type', 'in')->sum('amount');
+        $outMovementsSum = $movements->where('type', 'out')->sum('amount');
+
+        $expectedBalance = $shift->opening_balance + $cashSales + $inMovementsSum - $outMovementsSum;
+
+        $payments = Payment::where('cash_register_id', $shift->id)
+            ->where('status', 'completed')
+            ->with('order:id,order_number')
+            ->get();
+
         return response()->json([
             'message' => 'Turno cerrado exitosamente',
-            'shift' => $shift
+            'shift' => $shift->load('user:id,name'),
+            'cash_sales' => $cashSales,
+            'card_sales' => $cardSales,
+            'transfer_sales' => $transferSales,
+            'other_sales' => $otherSales,
+            'total_sales' => $totalSales,
+            'in_movements' => (float) $inMovementsSum,
+            'out_movements' => (float) $outMovementsSum,
+            'expected_balance' => $expectedBalance,
+            'movements' => $movements,
+            'payments' => $payments,
+            'restaurant' => \App\Models\Restaurant::find($restaurantId)
         ]);
     }
 
@@ -204,45 +255,13 @@ class CashRegisterController extends Controller
                 'transfer_sales' => 0,
                 'other_sales' => 0,
                 'total_sales' => 0,
-                'expected_balance' => 0
+                'expected_balance' => 0,
+                'movements' => [],
+                'payments' => []
             ]);
         }
 
-        // Calculate sales by payment method
-        $payments = Payment::where('cash_register_id', $shift->id)
-            ->where('status', 'completed')
-            ->selectRaw('payment_method, sum(amount) as total')
-            ->groupBy('payment_method')
-            ->pluck('total', 'payment_method');
-
-        $cashSales = (float) ($payments['cash'] ?? 0);
-        $cardSales = (float) ($payments['card'] ?? 0);
-        $transferSales = (float) ($payments['transfer'] ?? 0);
-        $otherSales = (float) ($payments['other'] ?? 0);
-        $totalSales = $cashSales + $cardSales + $transferSales + $otherSales;
-
-        // Fetch movements
-        $inMovements = CashMovement::where('cash_register_id', $shift->id)
-            ->where('type', 'in')
-            ->sum('amount');
-
-        $outMovements = CashMovement::where('cash_register_id', $shift->id)
-            ->where('type', 'out')
-            ->sum('amount');
-
-        $expectedBalance = $shift->opening_balance + $cashSales + $inMovements - $outMovements;
-
-        return response()->json([
-            'shift' => $shift,
-            'cash_sales' => $cashSales,
-            'card_sales' => $cardSales,
-            'transfer_sales' => $transferSales,
-            'other_sales' => $otherSales,
-            'total_sales' => $totalSales,
-            'in_movements' => (float) $inMovements,
-            'out_movements' => (float) $outMovements,
-            'expected_balance' => $expectedBalance
-        ]);
+        return $this->summaryByShift($shift);
     }
 
     public function history(Request $request)
