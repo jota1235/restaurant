@@ -113,6 +113,9 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
             onSaved();
         } catch (err) {
             console.error("Error saving product:", err);
+            const errorMsg = err.response?.data?.message || err.message || 'Error desconocido';
+            alert(`¡ERROR al guardar!\nDetalles: ${errorMsg}\nRevisa si la base de datos se actualizó correctamente.`);
+            
             if (err.response?.status === 422) {
                 setErrors(err.response.data.errors ?? {});
             } else if (err.response?.status === 403) {
