@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+
 
 class UserController extends Controller
 {
@@ -54,42 +56,45 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
-        $currentUser = $request->user();
+        return DB::transaction(function () use ($request) {
+            $currentUser = $request->user();
 
-        // Determinar restaurant_id: superadmin uses first of restaurant_ids; admin uses own
-        $restaurantIds = $request->restaurant_ids ?? [];
-        $restaurantId = $currentUser->hasRole('superadmin')
-            ? ($request->restaurant_id ?? ($restaurantIds[0] ?? $currentUser->restaurant_id))
-            : ($request->get('restaurant_id', $currentUser->restaurant_id));
+            // Determinar restaurant_id: superadmin uses first of restaurant_ids; admin uses own
+            $restaurantIds = $request->restaurant_ids ?? [];
+            $restaurantId = $currentUser->hasRole('superadmin')
+                ? ($request->restaurant_id ?? ($restaurantIds[0] ?? $currentUser->restaurant_id))
+                : ($request->get('restaurant_id', $currentUser->restaurant_id));
 
-        $user = User::create([
-            'name'          => $request->name,
-            'email'         => $request->email,
-            'password'      => Hash::make($request->password),
-            'restaurant_id' => $restaurantId,
-            'is_active'     => $request->boolean('is_active', true),
-        ]);
-
-        if ($request->role) {
-            $user->assignRole($request->role);
-        }
-
-        // Sync pivot table for multi-branch access
-        if ($currentUser->hasRole('superadmin') && !empty($restaurantIds)) {
-            $pivotData = collect($restaurantIds)->mapWithKeys(fn($id) => [
-                $id => ['role' => $request->role]
-            ])->all();
-            $user->restaurants()->sync($pivotData);
-        } elseif ($restaurantId) {
-            $user->restaurants()->syncWithoutDetaching([
-                $restaurantId => ['role' => $request->role]
+            $user = User::create([
+                'name'          => $request->name,
+                'email'         => $request->email,
+                'password'      => Hash::make($request->password),
+                'restaurant_id' => $restaurantId,
+                'is_active'     => $request->boolean('is_active', true),
             ]);
-        }
 
-        return response()->json([
-            'message' => 'Usuario creado exitosamente',
-            'data'    => new UserResource($user->load(['restaurant', 'roles'])),
-        ], 201);
+            if ($request->role) {
+                // Ensure we use the correct guard if specified in the model
+                $user->assignRole($request->role);
+            }
+
+            // Sync pivot table for multi-branch access
+            if ($currentUser->hasRole('superadmin') && !empty($restaurantIds)) {
+                $pivotData = collect($restaurantIds)->mapWithKeys(fn($id) => [
+                    $id => ['role' => $request->role]
+                ])->all();
+                $user->restaurants()->sync($pivotData);
+            } elseif ($restaurantId) {
+                $user->restaurants()->syncWithoutDetaching([
+                    $restaurantId => ['role' => $request->role]
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Usuario creado exitosamente',
+                'data'    => new UserResource($user->load(['restaurant', 'roles'])),
+            ], 201);
+        });
     }
 
     /**
@@ -111,36 +116,38 @@ class UserController extends Controller
     {
         $this->authorizeUserAccess($request, $user);
 
-        $data = $request->validated();
+        return DB::transaction(function () use ($request, $user) {
+            $data = $request->validated();
 
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
-        }
+            if (isset($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                unset($data['password']);
+            }
 
-        $user->update($data);
+            $user->update($data);
 
-        // Actualizar rol si se envía
-        if ($request->has('role') && $request->role) {
-            $user->syncRoles([$request->role]);
-        }
+            // Actualizar rol si se envía
+            if ($request->has('role') && $request->role) {
+                $user->syncRoles([$request->role]);
+            }
 
-        // Sync multi-branch access (superadmin only)
-        $restaurantIds = $request->restaurant_ids ?? [];
-        if ($request->user()->hasRole('superadmin') && !empty($restaurantIds)) {
-            $pivotData = collect($restaurantIds)->mapWithKeys(fn($id) => [
-                $id => ['role' => $request->role ?? $user->roles->first()?->name]
-            ])->all();
-            $user->restaurants()->sync($pivotData);
-            // Update default restaurant_id to the first selected
-            $user->update(['restaurant_id' => $restaurantIds[0]]);
-        }
+            // Sync multi-branch access (superadmin only)
+            $restaurantIds = $request->restaurant_ids ?? [];
+            if ($request->user()->hasRole('superadmin') && !empty($restaurantIds)) {
+                $pivotData = collect($restaurantIds)->mapWithKeys(fn($id) => [
+                    $id => ['role' => $request->role ?? $user->roles->first()?->name]
+                ])->all();
+                $user->restaurants()->sync($pivotData);
+                // Update default restaurant_id to the first selected
+                $user->update(['restaurant_id' => $restaurantIds[0]]);
+            }
 
-        return response()->json([
-            'message' => 'Usuario actualizado exitosamente',
-            'data'    => new UserResource($user->load(['restaurant', 'roles'])),
-        ]);
+            return response()->json([
+                'message' => 'Usuario actualizado exitosamente',
+                'data'    => new UserResource($user->load(['restaurant', 'roles'])),
+            ]);
+        });
     }
 
     /**
@@ -183,7 +190,17 @@ class UserController extends Controller
     private function authorizeUserAccess(Request $request, User $user): void
     {
         $currentUser = $request->user();
-        if (!$currentUser->hasRole('superadmin') && $user->restaurant_id !== $currentUser->restaurant_id) {
+        
+        // Superadmin bypass
+        try {
+            if ($currentUser->hasRole('superadmin')) {
+                return;
+            }
+        } catch (\Exception $e) {
+            // If role check fails due to guard issues, we continue to check restaurant_id
+        }
+
+        if ($user->restaurant_id !== $currentUser->restaurant_id) {
             abort(403, 'Sin permisos para este usuario');
         }
     }
