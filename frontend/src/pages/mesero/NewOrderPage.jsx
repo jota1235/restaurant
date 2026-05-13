@@ -497,9 +497,13 @@ export default function NewOrderPage() {
                                 <div className="text-right flex flex-col items-end gap-1">
                                     <p className="text-[10px] text-gray-400 font-black">${parseFloat(item.subtotal).toFixed(2)}</p>
                                     {['pending', 'preparing'].includes(item.status) && (
-                                        <button onClick={() => handleRemoveExistingItem(item.id)} className="text-red-400/40 hover:text-red-400 p-1 hover:bg-red-500/10 rounded-lg transition-all">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        <button
+                                            onClick={() => handleRemoveExistingItem(item.id)}
+                                            className="p-1.5 bg-red-500/15 hover:bg-red-500/30 text-white rounded-lg transition-all border border-red-500/20 hover:border-red-500/40 active:scale-95"
+                                            title="Eliminar producto"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </button>
                                     )}
@@ -552,9 +556,13 @@ export default function NewOrderPage() {
                                         <span className="w-5 text-center text-[11px] font-black text-white">{item.quantity}</span>
                                         <button onClick={() => updateQuantity(i, 1)} className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white bg-gray-800/60 rounded-md font-black text-xs transition-colors">+</button>
                                     </div>
-                                    <button onClick={() => removeFromCart(i)} className="text-gray-600 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded-lg transition-all">
-                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    <button
+                                        onClick={() => removeFromCart(i)}
+                                        title="Eliminar del carrito"
+                                        className="p-1.5 bg-red-500/15 hover:bg-red-500/30 text-white rounded-lg transition-all border border-red-500/20 hover:border-red-500/40 active:scale-95"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>
                                 </div>

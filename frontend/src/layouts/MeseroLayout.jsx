@@ -145,10 +145,10 @@ export default function MeseroLayout() {
             <div className="h-[2px] bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500" />
 
             {/* Header */}
-            <header className="bg-gray-900/90 backdrop-blur-xl border-b border-gray-800 px-4 md:px-8 h-16 md:h-20 flex items-center gap-3 md:gap-5 sticky top-0 z-30">
+            <header className="bg-gray-900/90 backdrop-blur-xl border-b border-gray-800 px-3 md:px-8 h-14 md:h-20 flex items-center gap-2 md:gap-5 sticky top-0 z-30">
                 {/* Logo */}
-                <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/30">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/30">
+                    <svg className="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
                             d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 6M17 13l1.5 6M9 19h6" />
                     </svg>
@@ -157,19 +157,18 @@ export default function MeseroLayout() {
                     <span className="font-black text-lg text-white tracking-widest">TaquerPOS</span>
                     <span className="text-xs font-black text-orange-300 bg-orange-500/20 border border-orange-500/30 px-3 py-1 rounded-lg uppercase tracking-widest">Mesero</span>
                 </div>
-                <span className="sm:hidden text-base text-gray-200 font-bold truncate">{user?.name?.split(' ')[0]}</span>
 
                 {/* Navigation */}
-                <nav className="flex gap-2 ml-2 md:ml-6">
+                <nav className="flex gap-1 md:gap-2 ml-1 md:ml-6">
                     {navItems.map(item => (
                         <NavLink
                             key={item.to}
                             to={item.to}
                             end={item.end}
                             className={({ isActive }) =>
-                                `px-3 md:px-4 py-2.5 rounded-xl text-[15px] font-black transition-all duration-200 flex items-center gap-2.5 whitespace-nowrap ${isActive
+                                `px-2.5 md:px-4 py-2 md:py-2.5 rounded-xl text-[13px] md:text-[15px] font-black transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${isActive
                                     ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 border border-orange-400/50'
-                                    : 'text-gray-300 hover:text-white hover:bg-gray-800 border border-transparent'
+                                    : 'text-gray-400 hover:text-white hover:bg-gray-800 border border-transparent'
                                 }`
                             }
                         >
@@ -180,19 +179,24 @@ export default function MeseroLayout() {
                 </nav>
 
                 {/* Right section */}
-                <div className="ml-auto flex items-center gap-3 md:gap-5">
-                    <BranchSwitcher />
-                    <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-gray-700">
+                <div className="ml-auto flex items-center gap-2 md:gap-5 flex-shrink-0">
+                    {/* BranchSwitcher oculto en móvil muy pequeño */}
+                    <div className="hidden sm:block">
+                        <BranchSwitcher />
+                    </div>
+                    <div className="hidden md:flex items-center gap-3 pl-4 border-l border-gray-700">
                         <div className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-lg font-black text-gray-200 uppercase shadow-inner">
                             {user?.name?.charAt(0)}
                         </div>
                         <span className="text-sm text-gray-200 font-bold hidden md:inline">{user?.name?.split(' ')[0]}</span>
                     </div>
+                    {/* Logout — siempre visible */}
                     <button
                         onClick={handleLogout}
-                        className="bg-gray-800/80 hover:bg-red-500/20 p-2.5 md:px-4 md:py-2.5 rounded-xl text-gray-300 hover:text-red-400 transition-all duration-200 border border-gray-700/80 hover:border-red-500/40"
+                        title="Cerrar sesión"
+                        className="flex-shrink-0 bg-gray-800/80 hover:bg-red-500/20 p-2 md:px-4 md:py-2.5 rounded-xl text-gray-300 hover:text-red-400 transition-all duration-200 border border-gray-700/80 hover:border-red-500/40"
                     >
-                        <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                     </button>
