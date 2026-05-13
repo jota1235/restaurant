@@ -91,7 +91,7 @@ export default function TableMap() {
     }, {});
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-8">
             {/* Header */}
             <div className="flex items-center justify-between gap-3">
                 <div>
@@ -130,7 +130,7 @@ export default function TableMap() {
             {loading ? (
                 <div className="grid gap-2 md:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="aspect-[4/3] bg-gray-900/40 rounded-2xl border border-gray-800/30 animate-pulse" />
+                        <div key={i} className="min-h-[140px] bg-gray-900/40 rounded-2xl border border-gray-800/30 animate-pulse" />
                     ))}
                 </div>
             ) : filtered.length === 0 ? (
@@ -154,7 +154,7 @@ export default function TableMap() {
                                     return (
                                         <div
                                             key={t.id}
-                                            className={`relative rounded-2xl border p-3 md:p-4 transition-all duration-200 ${cfg.bg} ${cfg.border} ${!t.is_active ? 'opacity-40' : ''} flex flex-col justify-between aspect-[4/3]`}
+                                            className={`relative rounded-2xl border p-3 md:p-4 transition-all duration-200 ${cfg.bg} ${cfg.border} ${!t.is_active ? 'opacity-40' : ''} flex flex-col justify-between min-h-[148px]`}
                                         >
                                             {/* Status + name */}
                                             <div className="flex flex-col items-center">
@@ -169,7 +169,7 @@ export default function TableMap() {
                                                     {t.status === 'occupied' && (
                                                         <button
                                                             onClick={() => navigate(`/mesero/orden?table_id=${t.id}`)}
-                                                            className="w-full text-[9px] md:text-[10px] font-black py-2 rounded-xl transition-all bg-orange-500 text-white shadow-lg shadow-orange-500/20 flex items-center justify-center uppercase tracking-wider hover:bg-orange-600 active:scale-[0.97]"
+                                                            className="w-full text-[9px] md:text-[10px] font-black py-2.5 rounded-xl transition-all bg-orange-500 text-white shadow-lg shadow-orange-500/20 flex items-center justify-center uppercase tracking-wider hover:bg-orange-600 active:scale-[0.97]"
                                                         >
                                                             Ver / Agregar
                                                         </button>
@@ -184,7 +184,7 @@ export default function TableMap() {
                                                                 }
                                                             }}
                                                             disabled={isChanging}
-                                                            className={`w-full text-[9px] md:text-[10px] font-black py-2 rounded-xl transition-all disabled:opacity-40 flex items-center justify-center gap-1 uppercase tracking-wider active:scale-[0.97]
+                                                            className={`w-full text-[9px] md:text-[10px] font-black py-2.5 rounded-xl transition-all disabled:opacity-40 flex items-center justify-center gap-1 uppercase tracking-wider active:scale-[0.97]
                                                                 ${t.status === 'available' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600' : 'bg-gray-950/60 text-gray-400 hover:text-white border border-gray-800/50'}`}
                                                         >
                                                             {isChanging ? (

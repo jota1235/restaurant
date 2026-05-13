@@ -284,7 +284,7 @@ export default function NewOrderPage() {
     );
 
     return (
-        <div className="flex flex-col sm:landscape:flex-row sm:flex-row h-full gap-3 overflow-hidden relative">
+        <div className="flex flex-col sm:landscape:flex-row sm:flex-row sm:h-full gap-3 sm:overflow-hidden relative">
             {/* ── Mobile Tab Switcher ── */}
             <div className="flex sm:hidden bg-gray-900/60 border border-gray-800/50 rounded-2xl p-1 mb-1">
                 <button

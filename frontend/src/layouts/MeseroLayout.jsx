@@ -199,7 +199,7 @@ export default function MeseroLayout() {
                 </div>
             </header>
 
-            <main className="flex-1 min-h-0 p-1.5 sm:p-2 md:p-4 lg:p-6 overflow-hidden relative">
+            <main className="flex-1 min-h-0 p-1.5 sm:p-2 md:p-4 lg:p-6 overflow-y-auto relative">
                 {/* Bell Notification Popup */}
                 {bellNotification && (
                     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce">

@@ -34,7 +34,7 @@ export default function MeseroHome() {
     }, [fetchData]);
 
     return (
-        <div className="max-w-3xl mx-auto py-4 md:py-6">
+        <div className="max-w-3xl mx-auto py-4 md:py-6 pb-8">
             <header className="mb-6 md:mb-8">
                 <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">¡Hola, {user?.name?.split(' ')[0]}! 👋</h1>
                 <p className="text-gray-500 mt-1 text-sm font-medium">Resumen de lo que está pasando ahora.</p>

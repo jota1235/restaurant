@@ -196,12 +196,14 @@ class UserController extends Controller
             if ($currentUser->hasRole('superadmin')) {
                 return;
             }
-        } catch (\Exception $e) {
-            // If role check fails due to guard issues, we continue to check restaurant_id
-        }
+        } catch (\Exception $e) {}
 
-        if ($user->restaurant_id !== $currentUser->restaurant_id) {
-            abort(403, 'Sin permisos para este usuario');
+        // Use the active restaurant from the request context (merged by RestaurantScope middleware)
+        // or fallback to the current user's default restaurant
+        $activeRestaurantId = (int) ($request->restaurant_id ?? $currentUser->restaurant_id);
+
+        if ((int) $user->restaurant_id !== $activeRestaurantId) {
+            abort(403, 'Sin permisos para este usuario (Sucursal no coincide)');
         }
     }
 }
