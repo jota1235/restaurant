@@ -1,10 +1,110 @@
 import { Outlet, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import useAuthStore from '../store/authStore';
 import BranchSwitcher from '../components/BranchSwitcher';
+import echo from '../api/echo';
 
 export default function CocinaLayout() {
     const { user, logout } = useAuthStore();
     const navigate = useNavigate();
+    const audioContextRef = useRef(null);
+    const [newOrderNotification, setNewOrderNotification] = useState(null);
+
+    // ─── Audio Engine (same unlock strategy as MeseroLayout) ────────────────
+    // iOS Safari and Android Chrome block AudioContext until a user gesture.
+    // We eagerly create and unlock the context on the first touch/click so
+    // subsequent programmatic plays work without any user interaction.
+
+    const playKitchenBell = useCallback(() => {
+        try {
+            if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const audioCtx = audioContextRef.current;
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            // Helper: play a single sine tone with fade-in / fade-out
+            const playTone = (delay, freq, duration = 0.6) => {
+                const osc      = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+                gainNode.gain.linearRampToValueAtTime(0.9, audioCtx.currentTime + delay + 0.04);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + duration);
+
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                osc.start(audioCtx.currentTime + delay);
+                osc.stop(audioCtx.currentTime + delay + duration);
+            };
+
+            // Kitchen alert: 3-tone ascending pattern (lower, more "urgent" than waiter bell)
+            // Do4 → Mi4 → Sol4 — clearly distinct from the mesero chime (G6/C7)
+            playTone(0.00, 523.25);  // C5
+            playTone(0.18, 659.25);  // E5
+            playTone(0.36, 783.99);  // G5
+            playTone(0.54, 1046.50); // C6 — final high ping
+        } catch (e) {
+            console.error('Kitchen audio error', e);
+        }
+    }, []);
+
+    // Unlock AudioContext on first user interaction (iOS/Android requirement)
+    useEffect(() => {
+        const initAudio = () => {
+            try {
+                if (!audioContextRef.current) {
+                    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // Play a silent 1-sample buffer to definitively unlock audio on iOS Safari
+                    const buffer = audioContextRef.current.createBuffer(1, 1, 22050);
+                    const source = audioContextRef.current.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(audioContextRef.current.destination);
+                    source.start(0);
+                }
+                if (audioContextRef.current.state === 'suspended') {
+                    audioContextRef.current.resume();
+                }
+            } catch (e) {
+                console.error('Audio unlock failed', e);
+            }
+        };
+
+        const events = ['click', 'touchstart', 'keydown', 'pointerdown'];
+        events.forEach(e => window.addEventListener(e, initAudio, { once: false }));
+        return () => events.forEach(e => window.removeEventListener(e, initAudio));
+    }, []);
+
+    // ─── WebSocket: listen for new orders on this cook's channel ────────────
+    useEffect(() => {
+        if (!user?.id || !echo) return;
+
+        // Listen on the cook's personal channel (same one CocinaPage uses)
+        const cookChannel = echo.private(`cook.${user.id}`);
+
+        cookChannel.listen('.order.created', (data) => {
+            const orderNumber = data?.order?.order_number ?? data?.order_number ?? '?';
+
+            playKitchenBell();
+            setNewOrderNotification(orderNumber);
+
+            // Auto-hide after 6 seconds
+            setTimeout(() => setNewOrderNotification(null), 6000);
+        });
+
+        return () => {
+            cookChannel.stopListening('.order.created');
+        };
+    }, [user?.id, playKitchenBell]);
 
     const handleLogout = async () => {
         await logout();
@@ -46,6 +146,7 @@ export default function CocinaLayout() {
                     </div>
                     <button
                         onClick={handleLogout}
+                        title="Cerrar sesión"
                         className="p-1.5 md:px-3 md:py-1.5 rounded-xl bg-gray-800/60 hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-all border border-gray-700/50 hover:border-red-500/20"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +156,16 @@ export default function CocinaLayout() {
                 </div>
             </header>
 
-            <main className="flex-1 min-h-0 p-2 md:p-4 overflow-hidden">
+            <main className="flex-1 min-h-0 p-2 md:p-4 overflow-hidden relative">
+                {/* New Order Notification Banner */}
+                {newOrderNotification && (
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 animate-bounce pointer-events-none">
+                        <div className="bg-emerald-500 text-white px-5 py-3 rounded-full font-black flex items-center gap-3 shadow-2xl shadow-emerald-500/60 border-4 border-emerald-400 whitespace-nowrap">
+                            <span className="text-2xl animate-pulse">🍽️</span>
+                            <span className="text-sm uppercase tracking-widest">¡NUEVA ORDEN #{newOrderNotification}!</span>
+                        </div>
+                    </div>
+                )}
                 <Outlet />
             </main>
         </div>
