@@ -162,8 +162,11 @@ class CashRegisterController extends Controller
 
         $payments = Payment::where('cash_register_id', $shift->id)
             ->where('status', 'completed')
-            ->with('order:id,order_number')
+            ->with('order:id,order_number,type')
             ->get();
+
+        $deliverySales = $payments->filter(fn($p) => $p->order && $p->order->type === 'delivery')->sum('amount');
+        $deliveryCount = $payments->filter(fn($p) => $p->order && $p->order->type === 'delivery')->unique('order_id')->count();
 
         return response()->json([
             'message' => 'Turno cerrado exitosamente',
@@ -173,6 +176,8 @@ class CashRegisterController extends Controller
             'transfer_sales' => $transferSales,
             'other_sales' => $otherSales,
             'total_sales' => $totalSales,
+            'delivery_sales' => (float) $deliverySales,
+            'delivery_count' => $deliveryCount,
             'in_movements' => (float) $inMovementsSum,
             'out_movements' => (float) $outMovementsSum,
             'expected_balance' => $expectedBalance,
@@ -255,6 +260,8 @@ class CashRegisterController extends Controller
                 'transfer_sales' => 0,
                 'other_sales' => 0,
                 'total_sales' => 0,
+                'delivery_sales' => 0,
+                'delivery_count' => 0,
                 'expected_balance' => 0,
                 'movements' => [],
                 'payments' => []

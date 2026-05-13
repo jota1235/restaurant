@@ -432,6 +432,15 @@ export default function CashRegisterControl() {
                                             <span className="font-black text-purple-400">${summary.transfer_sales.toFixed(2)}</span>
                                         </div>
                                     )}
+
+                                    {/* Delivery Orders Indicator */}
+                                    <div className="flex justify-between items-center p-3 bg-orange-500/[0.04] rounded-xl border border-orange-500/10">
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-orange-400/70">📦 Vtas a Domicilio</span>
+                                            <span className="text-[9px] text-orange-400/50 uppercase font-black tracking-widest">{summary.delivery_count} pedidos</span>
+                                        </div>
+                                        <span className="font-black text-orange-400">${summary.delivery_sales.toFixed(2)}</span>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="animate-pulse h-12 bg-gray-900 rounded-xl" />

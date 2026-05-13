@@ -126,6 +126,12 @@ export default function CashRegisterTicket({ data, onClose }) {
                             <span>TOTAL VENTAS:</span> <span>${data.total_sales.toFixed(2)}</span>
                         </div>
 
+                        <div style={s.sep} />
+                        <div style={{...s.bold, textAlign: 'center'}}>VENTAS A DOMICILIO</div>
+                        <div style={s.sep} />
+                        <div style={s.flex}><span>Cant. Pedidos:</span> <span>{data.delivery_count}</span></div>
+                        <div style={s.flex}><span>Total Domicilio:</span> <span>${data.delivery_sales.toFixed(2)}</span></div>
+
                         {movements.length > 0 && (
                             <>
                                 <div style={s.sep} />
