@@ -165,8 +165,8 @@ class CashRegisterController extends Controller
             ->with('order:id,order_number,type')
             ->get();
 
-        $deliverySales = $payments->filter(fn($p) => $p->order && $p->order->type === 'delivery')->sum('amount');
-        $deliveryCount = $payments->filter(fn($p) => $p->order && $p->order->type === 'delivery')->unique('order_id')->count();
+        $deliverySales = $payments->filter(fn($p) => $p->order && in_array($p->order->type, ['delivery', 'takeaway']))->sum('amount');
+        $deliveryCount = $payments->filter(fn($p) => $p->order && in_array($p->order->type, ['delivery', 'takeaway']))->unique('order_id')->count();
 
         return response()->json([
             'message' => 'Turno cerrado exitosamente',
