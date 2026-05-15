@@ -116,7 +116,7 @@ export default function MeseroLayout() {
         };
 
         const events = ['click', 'touchstart', 'keydown', 'pointerdown'];
-        events.forEach(e => window.addEventListener(e, initAudio, { once: true }));
+        events.forEach(e => window.addEventListener(e, initAudio, { passive: true }));
         return () => events.forEach(e => window.removeEventListener(e, initAudio));
     }, []);
 
@@ -186,9 +186,22 @@ export default function MeseroLayout() {
                     {!audioUnlocked && (
                         <button 
                             onClick={() => {
-                                if (audioContextRef.current?.state === 'suspended') {
-                                    audioContextRef.current.resume().then(() => setAudioUnlocked(true));
-                                } else {
+                                try {
+                                    if (!audioContextRef.current) {
+                                        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                                        const buffer = audioContextRef.current.createBuffer(1, 1, 22050);
+                                        const source = audioContextRef.current.createBufferSource();
+                                        source.buffer = buffer;
+                                        source.connect(audioContextRef.current.destination);
+                                        source.start(0);
+                                    }
+                                    if (audioContextRef.current.state === 'suspended') {
+                                        audioContextRef.current.resume().then(() => setAudioUnlocked(true));
+                                    } else {
+                                        setAudioUnlocked(true);
+                                    }
+                                } catch (e) {
+                                    console.error(e);
                                     setAudioUnlocked(true);
                                 }
                             }}
