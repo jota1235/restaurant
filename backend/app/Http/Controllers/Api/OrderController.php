@@ -12,6 +12,7 @@ use App\Services\AuditLogger;
 use App\Events\OrderCreated;
 use App\Events\OrderStatusUpdated;
 use App\Events\OrderBellRung;
+use App\Events\CookBellRung;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -305,6 +306,18 @@ class OrderController extends Controller
 
         // Broadcast a refresh to KDS because order changed
         broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+
+        // Broadcast bell to assigned cooks for the newly added items
+        $cookIds = $newItems
+            ->map(fn($item) => $item->product?->category?->assigned_cook_id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (!empty($cookIds)) {
+            broadcast(new CookBellRung($cookIds, $order->order_number))->toOthers();
+        }
 
         AuditLogger::log(
             'order.items_added',

@@ -9,6 +9,7 @@ export default function CocinaLayout() {
     const navigate = useNavigate();
     const audioContextRef = useRef(null);
     const [newOrderNotification, setNewOrderNotification] = useState(null);
+    const [audioUnlocked, setAudioUnlocked] = useState(false);
 
     // ─── Audio Engine (same unlock strategy as MeseroLayout) ────────────────
     // iOS Safari and Android Chrome block AudioContext until a user gesture.
@@ -72,7 +73,9 @@ export default function CocinaLayout() {
                     source.start(0);
                 }
                 if (audioContextRef.current.state === 'suspended') {
-                    audioContextRef.current.resume();
+                    audioContextRef.current.resume().then(() => setAudioUnlocked(true));
+                } else {
+                    setAudioUnlocked(true);
                 }
             } catch (e) {
                 console.error('Audio unlock failed', e);
@@ -80,7 +83,7 @@ export default function CocinaLayout() {
         };
 
         const events = ['click', 'touchstart', 'keydown', 'pointerdown'];
-        events.forEach(e => window.addEventListener(e, initAudio, { once: false }));
+        events.forEach(e => window.addEventListener(e, initAudio, { once: true }));
         return () => events.forEach(e => window.removeEventListener(e, initAudio));
     }, []);
 
@@ -99,6 +102,11 @@ export default function CocinaLayout() {
 
             // Auto-hide after 6 seconds
             setTimeout(() => setNewOrderNotification(null), 6000);
+        });
+        
+        // Also listen to a custom bell event in case waiters explicitly ring it or add items
+        cookChannel.listen('.order.bell', (data) => {
+            playKitchenBell();
         });
 
         return () => {
@@ -137,6 +145,24 @@ export default function CocinaLayout() {
 
                 {/* Right section */}
                 <div className="ml-auto flex items-center gap-2 md:gap-3">
+                    {!audioUnlocked && (
+                        <button 
+                            onClick={() => {
+                                if (audioContextRef.current?.state === 'suspended') {
+                                    audioContextRef.current.resume().then(() => setAudioUnlocked(true));
+                                } else {
+                                    setAudioUnlocked(true);
+                                }
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-xl text-red-400 text-[10px] md:text-xs font-black uppercase tracking-widest shadow-lg shadow-red-500/20 animate-pulse"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                            </svg>
+                            Activar Timbre
+                        </button>
+                    )}
                     <BranchSwitcher />
                     <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-gray-800">
                         <div className="w-7 h-7 bg-gray-800 rounded-lg flex items-center justify-center text-[11px] font-black text-gray-400 uppercase">
