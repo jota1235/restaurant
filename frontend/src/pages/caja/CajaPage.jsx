@@ -324,7 +324,7 @@ export default function CajaPage() {
                                         Total
                                     </span>
                                     <span className={`text-xl font-black tracking-tight ${selectedOrder?.id === order.id ? 'text-white' : 'text-blue-400'}`}>
-                                        ${order.total.toFixed(2)}
+                                        ${(Number(order.total) || 0).toFixed(2)}
                                     </span>
                                 </div>
                             </button>
@@ -413,12 +413,12 @@ export default function CajaPage() {
                             <div className="space-y-1.5">
                                 <div className="flex justify-between text-[10px] font-bold text-gray-600 uppercase tracking-widest">
                                     <span>Subtotal</span>
-                                    <span>${selectedOrder.subtotal.toFixed(2)}</span>
+                                    <span>${(Number(selectedOrder.subtotal) || 0).toFixed(2)}</span>
                                 </div>
                                 {selectedOrder.tax > 0 && (
                                 <div className="flex justify-between text-[10px] font-bold text-gray-600 uppercase tracking-widest">
                                     <span>Impuestos</span>
-                                    <span>${selectedOrder.tax.toFixed(2)}</span>
+                                    <span>${(Number(selectedOrder.tax) || 0).toFixed(2)}</span>
                                 </div>
                                 )}
                                 {(selectedOrder.type === 'takeaway' || selectedOrder.type === 'delivery') && (
@@ -517,7 +517,7 @@ export default function CajaPage() {
                             </div>
                             <div className="flex justify-between items-end pt-2 pb-1">
                                 <span className="text-xs font-black text-white uppercase tracking-widest">Total</span>
-                                <span className="text-3xl font-black text-blue-400 tracking-tighter leading-none">${selectedOrder.total.toFixed(2)}</span>
+                                <span className="text-3xl font-black text-blue-400 tracking-tighter leading-none">${(Number(selectedOrder.total) || 0).toFixed(2)}</span>
                             </div>
                             <button
                                 onClick={handlePrintPreCuenta}
@@ -579,7 +579,7 @@ export default function CajaPage() {
                                 </button>
                             </div>
                             <span className="text-gray-500 text-xs font-bold">Orden #{selectedOrder.order_number}</span>
-                            <h3 className="text-4xl font-black text-white tracking-tighter mt-1">${selectedOrder.total.toFixed(2)}</h3>
+                            <h3 className="text-4xl font-black text-white tracking-tighter mt-1">${(Number(selectedOrder.total) || 0).toFixed(2)}</h3>
                         </div>
 
                         <div className="p-6 space-y-5 overflow-y-auto flex-1">
