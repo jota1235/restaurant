@@ -185,11 +185,12 @@ class OrderController extends Controller
             'is_pre_cuenta' => true,
             'folio' => $order->order_number, // We use order number since there is no payment folio yet
             'restaurant' => [
-                'name'    => $restaurant->name,
-                'address' => $restaurant->address,
-                'phone'   => $restaurant->phone,
-                'city'    => $restaurant->city,
-                'logo'    => $restaurant->logo, 
+                'name'      => $restaurant->name,
+                'address'   => $restaurant->address,
+                'phone'     => $restaurant->phone,
+                'whatsapp'  => $restaurant->whatsapp,
+                'city'      => $restaurant->city,
+                'logo'      => $restaurant->logo, 
             ],
             'cashier' => $order->user->name ?? 'Sistema',
             'date'    => now()->format('d/m/Y'),

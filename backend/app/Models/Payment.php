@@ -82,11 +82,12 @@ class Payment extends Model
         return [
             'folio' => $this->ticket_folio,
             'restaurant' => [
-                'name'    => $restaurant->name,
-                'address' => $restaurant->address,
-                'phone'   => $restaurant->phone,
-                'city'    => $restaurant->city,
-                'logo'    => $restaurant->logo, // base64 data URI
+                'name'      => $restaurant->name,
+                'address'   => $restaurant->address,
+                'phone'     => $restaurant->phone,
+                'whatsapp'  => $restaurant->whatsapp,
+                'city'      => $restaurant->city,
+                'logo'      => $restaurant->logo, // base64 data URI
             ],
             'cashier' => $this->user->name,
             'date'    => now()->format('d/m/Y'),

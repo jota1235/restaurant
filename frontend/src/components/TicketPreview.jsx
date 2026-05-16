@@ -151,9 +151,10 @@ export default function TicketPreview({ ticketData, onClose, onPrint }) {
                                 {ticketData.is_pre_cuenta ? '*** PRE-CUENTA ***' : (r.name || 'Restaurante')}
                             </div>
                             {ticketData.is_pre_cuenta && <div style={{ fontSize: '16px', fontWeight: '900' }}>{r.name || 'Restaurante'}</div>}
-                            {r.address && <div style={{ ...s.small }}>{r.address}</div>}
-                            {r.city    && <div style={{ ...s.small }}>{r.city}</div>}
-                            {r.phone   && <div style={{ ...s.small }}>Tel: {r.phone}</div>}
+                            {r.address   && <div style={{ ...s.small }}>{r.address}</div>}
+                            {r.city      && <div style={{ ...s.small }}>{r.city}</div>}
+                            {r.phone     && <div style={{ ...s.small }}>Tel: {r.phone}</div>}
+                            {r.whatsapp  && <div style={{ ...s.small }}>WhatsApp: {r.whatsapp}</div>}
                         </div>
 
                         <div style={s.sep} />

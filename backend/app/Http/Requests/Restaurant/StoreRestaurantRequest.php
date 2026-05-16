@@ -18,6 +18,7 @@ class StoreRestaurantRequest extends FormRequest
             'name'             => ['required', 'string', 'max:150'],
             'email'            => ['nullable', 'email', 'unique:restaurants,email'],
             'phone'            => ['nullable', 'string', 'max:20'],
+            'whatsapp'         => ['nullable', 'string', 'max:20'],
             'address'          => ['nullable', 'string', 'max:255'],
             'city'             => ['nullable', 'string', 'max:100'],
             'state'            => ['nullable', 'string', 'max:100'],

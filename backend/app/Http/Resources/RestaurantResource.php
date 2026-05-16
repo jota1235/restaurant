@@ -37,6 +37,7 @@ class RestaurantResource extends JsonResource
             }),
             'tax_rate'   => (float) $this->tax_rate,
             'logo'       => $this->logo,
+            'whatsapp'   => $this->whatsapp,
             'created_at' => $this->created_at?->format('Y-m-d'),
         ];
     }

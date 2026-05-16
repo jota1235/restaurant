@@ -22,6 +22,7 @@ class UpdateRestaurantRequest extends FormRequest
             'name'     => ['sometimes', 'string', 'max:150'],
             'email'    => ['sometimes', 'nullable', 'email', Rule::unique('restaurants', 'email')->ignore($restaurantId)],
             'phone'    => ['sometimes', 'nullable', 'string', 'max:20'],
+            'whatsapp' => ['sometimes', 'nullable', 'string', 'max:20'],
             'address'  => ['sometimes', 'nullable', 'string', 'max:255'],
             'city'     => ['sometimes', 'nullable', 'string', 'max:100'],
             'state'    => ['sometimes', 'nullable', 'string', 'max:100'],

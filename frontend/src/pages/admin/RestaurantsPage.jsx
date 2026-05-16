@@ -10,7 +10,7 @@ const STATUS_STYLE = {
 };
 
 const EMPTY_FORM = {
-    name: '', email: '', phone: '', address: '',
+    name: '', email: '', phone: '', whatsapp: '', address: '',
     city: '', state: '', country: 'México',
     tax_rate: 0, logo: null,
 };
@@ -60,6 +60,7 @@ export default function RestaurantsPage() {
             name:     r.name     ?? '',
             email:    r.email    ?? '',
             phone:    r.phone    ?? '',
+            whatsapp: r.whatsapp ?? '',
             address:  r.address  ?? '',
             city:     r.city     ?? '',
             state:    r.state    ?? '',
@@ -251,6 +252,18 @@ export default function RestaurantsPage() {
                                         placeholder="288 123 4567"
                                         className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500" />
                                 </div>
+                            </div>
+
+                            {/* WhatsApp */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">WhatsApp <span className="text-gray-600 normal-case font-normal">(opcional, aparece en tickets)</span></label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base">📱</span>
+                                    <input type="text" value={form.whatsapp} onChange={e => handleChange('whatsapp', e.target.value)}
+                                        placeholder="52 288 123 4567"
+                                        className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-green-500" />
+                                </div>
+                                <p className="text-[10px] text-gray-600 mt-1">Incluye código de país. Ej: 52 288 123 4567</p>
                             </div>
 
                             {/* Dirección */}
