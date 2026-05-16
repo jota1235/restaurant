@@ -403,7 +403,7 @@ export default function CajaPage() {
                                             )}
                                         </div>
                                     </div>
-                                    <span className="text-sm font-black text-gray-300 whitespace-nowrap">${item.subtotal.toFixed(2)}</span>
+                                    <span className="text-sm font-black text-gray-300 whitespace-nowrap">${(Number(item.subtotal) || 0).toFixed(2)}</span>
                                 </div>
                             ))}
                         </div>
