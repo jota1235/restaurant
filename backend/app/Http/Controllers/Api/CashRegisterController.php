@@ -165,8 +165,13 @@ class CashRegisterController extends Controller
             ->with('order:id,order_number,type')
             ->get();
 
-        $deliverySales = $payments->filter(fn($p) => $p->order && in_array($p->order->type, ['delivery', 'takeaway']))->sum('amount');
-        $deliveryCount = $payments->filter(fn($p) => $p->order && in_array($p->order->type, ['delivery', 'takeaway']))->unique('order_id')->count();
+        $dineInSales = $payments->filter(fn($p) => $p->order && $p->order->type === 'dine_in')->sum('amount');
+        $takeawaySales = $payments->filter(fn($p) => $p->order && $p->order->type === 'takeaway')->sum('amount');
+        $deliverySales = $payments->filter(fn($p) => $p->order && $p->order->type === 'delivery')->sum('amount');
+
+        $dineInCount = $payments->filter(fn($p) => $p->order && $p->order->type === 'dine_in')->unique('order_id')->count();
+        $takeawayCount = $payments->filter(fn($p) => $p->order && $p->order->type === 'takeaway')->unique('order_id')->count();
+        $deliveryCount = $payments->filter(fn($p) => $p->order && $p->order->type === 'delivery')->unique('order_id')->count();
 
         return response()->json([
             'message' => 'Turno cerrado exitosamente',
@@ -176,6 +181,10 @@ class CashRegisterController extends Controller
             'transfer_sales' => $transferSales,
             'other_sales' => $otherSales,
             'total_sales' => $totalSales,
+            'dine_in_sales' => (float) $dineInSales,
+            'dine_in_count' => $dineInCount,
+            'takeaway_sales' => (float) $takeawaySales,
+            'takeaway_count' => $takeawayCount,
             'delivery_sales' => (float) $deliverySales,
             'delivery_count' => $deliveryCount,
             'in_movements' => (float) $inMovementsSum,
@@ -260,6 +269,10 @@ class CashRegisterController extends Controller
                 'transfer_sales' => 0,
                 'other_sales' => 0,
                 'total_sales' => 0,
+                'dine_in_sales' => 0,
+                'dine_in_count' => 0,
+                'takeaway_sales' => 0,
+                'takeaway_count' => 0,
                 'delivery_sales' => 0,
                 'delivery_count' => 0,
                 'expected_balance' => 0,

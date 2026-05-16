@@ -83,66 +83,69 @@ export default function CashRegisterTicket({ data, onClose }) {
                     <div ref={ticketRef} style={s.wrap}>
                         <div style={s.title}>CORTE DE CAJA</div>
                         <div style={s.center}>{restaurant.name}</div>
-                        {restaurant.address && <div style={{...s.center, fontSize: '11px'}}>{restaurant.address}</div>}
-                        
+                        {restaurant.address && <div style={{ ...s.center, fontSize: '11px' }}>{restaurant.address}</div>}
+
                         <div style={s.sep} />
-                        
+
                         <div style={s.flex}><span>Turno ID:</span> <span>#{shift.id}</span></div>
                         <div style={s.flex}><span>Cajero:</span> <span>{shift.user?.name}</span></div>
                         <div style={s.flex}><span>Apertura:</span> <span>{formatDate(shift.opened_at)}</span></div>
                         {shift.closed_at && <div style={s.flex}><span>Cierre:</span> <span>{formatDate(shift.closed_at)}</span></div>}
-                        
+
                         <div style={s.sep} />
-                        <div style={{...s.bold, textAlign: 'center'}}>RESUMEN DE EFECTIVO</div>
+                        <div style={{ ...s.bold, textAlign: 'center' }}>RESUMEN DE EFECTIVO</div>
                         <div style={s.sep} />
-                        
+
                         <div style={s.flex}><span>(+) Fondo Inicial:</span> <span>${parseFloat(shift.opening_balance).toFixed(2)}</span></div>
                         <div style={s.flex}><span>(+) Ventas Efectivo:</span> <span>${data.cash_sales.toFixed(2)}</span></div>
                         <div style={s.flex}><span>(+) Entradas:</span> <span>${data.in_movements.toFixed(2)}</span></div>
                         <div style={s.flex}><span>(-) Salidas:</span> <span>${data.out_movements.toFixed(2)}</span></div>
-                        
+
                         <div style={s.sep} />
-                        <div style={{...s.flex, fontSize: '16px'}}>
-                            <span>ESPERADO CAJA:</span> 
+                        <div style={{ ...s.flex, fontSize: '16px' }}>
+                            <span>ESPERADO CAJA:</span>
                             <span>${data.expected_balance.toFixed(2)}</span>
                         </div>
                         {shift.status === 'closed' && (
                             <>
                                 <div style={s.flex}><span>REAL EN CAJA:</span> <span>${parseFloat(shift.closing_balance).toFixed(2)}</span></div>
-                                <div style={{...s.flex, color: shift.difference < 0 ? 'red' : 'black'}}>
-                                    <span>DIFERENCIA:</span> 
+                                <div style={{ ...s.flex, color: shift.difference < 0 ? 'red' : 'black' }}>
+                                    <span>DIFERENCIA:</span>
                                     <span>${parseFloat(shift.difference).toFixed(2)}</span>
                                 </div>
                             </>
                         )}
 
                         <div style={s.sep} />
-                        <div style={{...s.bold, textAlign: 'center'}}>OTRAS VENTAS (No Efectivo)</div>
+                        <div style={{ ...s.bold, textAlign: 'center' }}>OTRAS VENTAS (No Efectivo)</div>
                         <div style={s.sep} />
                         <div style={s.flex}><span>Ventas Tarjeta:</span> <span>${data.card_sales.toFixed(2)}</span></div>
                         <div style={s.flex}><span>Transferencias:</span> <span>${data.transfer_sales.toFixed(2)}</span></div>
                         <div style={s.flex}><span>Otros:</span> <span>${data.other_sales.toFixed(2)}</span></div>
-                        <div style={{...s.flex, borderTop: '1px solid #000', marginTop: '2px'}}>
+                        <div style={{ ...s.flex, borderTop: '1px solid #000', marginTop: '2px' }}>
                             <span>TOTAL VENTAS:</span> <span>${data.total_sales.toFixed(2)}</span>
                         </div>
 
+
                         <div style={s.sep} />
-                        <div style={{...s.bold, textAlign: 'center'}}>VENTAS A DOMICILIO</div>
                         <div style={s.sep} />
-                        <div style={s.flex}><span>Cant. Pedidos:</span> <span>{data.delivery_count}</span></div>
-                        <div style={s.flex}><span>Total Domicilio:</span> <span>${data.delivery_sales.toFixed(2)}</span></div>
+                        <div style={{ ...s.bold, textAlign: 'center' }}>VENTAS POR TIPO DE SERVICIO</div>
+                        <div style={s.sep} />
+                        <div style={s.flex}><span>Comedor ({data.dine_in_count || 0}):</span> <span>${(data.dine_in_sales || 0).toFixed(2)}</span></div>
+                        <div style={s.flex}><span>Para Llevar ({data.takeaway_count || 0}):</span> <span>${(data.takeaway_sales || 0).toFixed(2)}</span></div>
+                        <div style={s.flex}><span>A Domicilio ({data.delivery_count || 0}):</span> <span>${(data.delivery_sales || 0).toFixed(2)}</span></div>
 
                         {movements.length > 0 && (
                             <>
                                 <div style={s.sep} />
-                                <div style={{...s.bold, textAlign: 'center'}}>MOVIMIENTOS DETALLADOS</div>
+                                <div style={{ ...s.bold, textAlign: 'center' }}>MOVIMIENTOS DETALLADOS</div>
                                 <div style={s.sep} />
-                                <table style={{width: '100%', fontSize: '11px'}}>
+                                <table style={{ width: '100%', fontSize: '11px' }}>
                                     <tbody>
                                         {movements.map((m, i) => (
                                             <tr key={i}>
                                                 <td>{m.type === 'in' ? '[E]' : '[S]'} {m.reason}</td>
-                                                <td style={{textAlign: 'right'}}>{m.type === 'in' ? '+' : '-'}${parseFloat(m.amount).toFixed(2)}</td>
+                                                <td style={{ textAlign: 'right' }}>{m.type === 'in' ? '+' : '-'}${parseFloat(m.amount).toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -153,14 +156,14 @@ export default function CashRegisterTicket({ data, onClose }) {
                         {payments.length > 0 && (
                             <>
                                 <div style={s.sep} />
-                                <div style={{...s.bold, textAlign: 'center'}}>DETALLE DE VENTAS</div>
+                                <div style={{ ...s.bold, textAlign: 'center' }}>DETALLE DE VENTAS</div>
                                 <div style={s.sep} />
-                                <table style={{width: '100%', fontSize: '11px'}}>
+                                <table style={{ width: '100%', fontSize: '11px' }}>
                                     <tbody>
                                         {payments.map((p, i) => (
                                             <tr key={i}>
                                                 <td>#{p.order?.order_number} ({p.payment_method})</td>
-                                                <td style={{textAlign: 'right'}}>${parseFloat(p.amount).toFixed(2)}</td>
+                                                <td style={{ textAlign: 'right' }}>${parseFloat(p.amount).toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -169,7 +172,7 @@ export default function CashRegisterTicket({ data, onClose }) {
                         )}
 
                         <div style={s.sep} />
-                        <div style={{textAlign: 'center', fontSize: '10px', marginTop: '10px'}}>
+                        <div style={{ textAlign: 'center', fontSize: '10px', marginTop: '10px' }}>
                             Generado el {new Date().toLocaleString()}
                         </div>
                     </div>

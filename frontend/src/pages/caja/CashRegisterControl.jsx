@@ -433,13 +433,29 @@ export default function CashRegisterControl() {
                                         </div>
                                     )}
 
-                                    {/* Delivery Orders Indicator */}
+                                    {/* Service Type Indicators */}
+                                    <div className="flex justify-between items-center p-3 bg-indigo-500/[0.04] rounded-xl border border-indigo-500/10">
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-indigo-400/70">🍽️ Ventas Comedor</span>
+                                            <span className="text-[9px] text-indigo-400/50 uppercase font-black tracking-widest">{summary.dine_in_count || 0} pedidos</span>
+                                        </div>
+                                        <span className="font-black text-indigo-400">${(summary.dine_in_sales || 0).toFixed(2)}</span>
+                                    </div>
+
+                                    <div className="flex justify-between items-center p-3 bg-pink-500/[0.04] rounded-xl border border-pink-500/10">
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-pink-400/70">🛍️ Para Llevar</span>
+                                            <span className="text-[9px] text-pink-400/50 uppercase font-black tracking-widest">{summary.takeaway_count || 0} pedidos</span>
+                                        </div>
+                                        <span className="font-black text-pink-400">${(summary.takeaway_sales || 0).toFixed(2)}</span>
+                                    </div>
+
                                     <div className="flex justify-between items-center p-3 bg-orange-500/[0.04] rounded-xl border border-orange-500/10">
                                         <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-orange-400/70">📦 Vtas a Domicilio</span>
-                                            <span className="text-[9px] text-orange-400/50 uppercase font-black tracking-widest">{summary.delivery_count} pedidos</span>
+                                            <span className="text-[11px] font-bold text-orange-400/70">📦 A Domicilio</span>
+                                            <span className="text-[9px] text-orange-400/50 uppercase font-black tracking-widest">{summary.delivery_count || 0} pedidos</span>
                                         </div>
-                                        <span className="font-black text-orange-400">${summary.delivery_sales.toFixed(2)}</span>
+                                        <span className="font-black text-orange-400">${(summary.delivery_sales || 0).toFixed(2)}</span>
                                     </div>
                                 </div>
                             ) : (
