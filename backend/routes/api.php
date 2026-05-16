@@ -34,22 +34,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/select-branch', [AuthController::class, 'selectBranch']);
     });
 
+    // ===== RESTAURANTES (Fuera de scope porque es gestión global) =====
+    // Superadmin: CRUD completo
+    Route::middleware('role:superadmin')->group(function () {
+        Route::get('restaurants', [RestaurantController::class, 'index']);
+        Route::post('restaurants', [RestaurantController::class, 'store']);
+        Route::delete('restaurants/{restaurant}', [RestaurantController::class, 'destroy']);
+        Route::patch('restaurants/{restaurant}/toggle-active', [RestaurantController::class, 'toggleActive']);
+        Route::patch('restaurants/{restaurant}/extend-subscription', [RestaurantController::class, 'extendSubscription']);
+    });
+    // Admin también puede ver/editar SU restaurante
+    Route::middleware('role:superadmin,admin')->group(function () {
+        Route::get('restaurants/{restaurant}', [RestaurantController::class, 'show']);
+        Route::put('restaurants/{restaurant}', [RestaurantController::class, 'update']);
+        Route::patch('restaurants/{restaurant}', [RestaurantController::class, 'update']);
+    });
+
     // Rutas Multi-Tenant (Requieren restaurant_id y suscripción activa)
     Route::middleware(['restaurant.scope', 'check.subscription'])->group(function () {
-
-        // ===== RESTAURANTES =====
-        // Superadmin: CRUD completo
-        Route::middleware('role:superadmin')->group(function () {
-            Route::apiResource('restaurants', RestaurantController::class)->except(['update']);
-            Route::patch('restaurants/{restaurant}/toggle-active', [RestaurantController::class, 'toggleActive']);
-            Route::patch('restaurants/{restaurant}/extend-subscription', [RestaurantController::class, 'extendSubscription']);
-        });
-        // Admin también puede ver/editar SU restaurante
-        Route::middleware('role:superadmin,admin')->group(function () {
-            Route::get('restaurants/{restaurant}', [RestaurantController::class, 'show']);
-            Route::put('restaurants/{restaurant}', [RestaurantController::class, 'update']);
-            Route::patch('restaurants/{restaurant}', [RestaurantController::class, 'update']);
-        });
 
         // ===== ESTADÍSTICAS =====
         Route::middleware('role:superadmin,admin')->group(function () {
