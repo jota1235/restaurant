@@ -26,7 +26,9 @@ class RestaurantController extends Controller
             ->withCount(['users', 'members']);
 
         // Superadmin ve todos; admin ve los que tiene asignados
-        if (!$user->hasRole('superadmin')) {
+        $superAdminEmails = ['jafet@jotapos.com', 'jafet@pos.com', 'superadmin@pos.com'];
+        
+        if (!$user->hasRole('superadmin') && !in_array($user->email, $superAdminEmails)) {
             $restaurantIds = $user->restaurants()->pluck('restaurants.id')->push($user->restaurant_id)->unique()->filter();
             $query->whereIn('id', $restaurantIds);
         }
