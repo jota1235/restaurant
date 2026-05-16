@@ -37,6 +37,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.subscription' => CheckSubscription::class,
             'role' => RoleMiddleware::class,
         ]);
+
+        $middleware->redirectGuestsTo(fn () => response()->json(['message' => 'No autenticado'], 401));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
