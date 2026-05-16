@@ -104,13 +104,17 @@ export default function CocinaLayout() {
             setTimeout(() => setNewOrderNotification(null), 6000);
         });
         
-        // Also listen to a custom bell event in case waiters explicitly ring it or add items
-        cookChannel.listen('.order.bell', (data) => {
+        // Event from Waiter adding items to existing order
+        cookChannel.listen('.cook.bell', (data) => {
+            const orderNumber = data?.order_number ?? '?';
             playKitchenBell();
+            setNewOrderNotification(orderNumber + ' (Actualización)');
+            setTimeout(() => setNewOrderNotification(null), 6000);
         });
 
         return () => {
             cookChannel.stopListening('.order.created');
+            cookChannel.stopListening('.cook.bell');
         };
     }, [user?.id, playKitchenBell]);
 
