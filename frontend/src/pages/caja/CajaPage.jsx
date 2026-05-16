@@ -154,6 +154,23 @@ export default function CajaPage() {
         }
     };
 
+    const handleToggleTax = async () => {
+        if (!selectedOrder) return;
+        setProcessing(true);
+        try {
+            const res = await ordersAPI.toggleTax(selectedOrder.id);
+            const updatedOrder = res?.data || res;
+            if (updatedOrder && updatedOrder.id) {
+                setSelectedOrder(updatedOrder);
+                setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+            }
+        } catch (e) {
+            alert(e.response?.data?.message || 'Error al modificar IVA');
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const getStatusLabel = (s) => {
         switch (s) {
             case 'ready': return 'Listo';
@@ -475,6 +492,28 @@ export default function CajaPage() {
                                         )}
                                     </div>
                                 )}
+                                
+                                {/* Botón Añadir IVA */}
+                                <div className="flex justify-between items-center text-[10px] font-bold text-gray-600 uppercase tracking-widest min-h-[32px]">
+                                    <span>IVA (16%)</span>
+                                    <button
+                                        onClick={handleToggleTax}
+                                        disabled={processing}
+                                        className={`px-3 py-1.5 border rounded-xl transition-all cursor-pointer font-black text-[10px] flex items-center gap-1.5 ${
+                                            selectedOrder.tax > 0 
+                                            ? 'bg-blue-500/10 border-blue-500/40 text-blue-400 hover:bg-blue-500/20' 
+                                            : 'bg-gray-800/50 border-gray-700 hover:border-gray-600 text-gray-400 hover:text-white'
+                                        }`}
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                            {selectedOrder.tax > 0 
+                                                ? <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                : <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                            }
+                                        </svg>
+                                        {selectedOrder.tax > 0 ? 'IVA Aplicado' : 'Añadir IVA'}
+                                    </button>
+                                </div>
                             </div>
                             <div className="flex justify-between items-end pt-2 pb-1">
                                 <span className="text-xs font-black text-white uppercase tracking-widest">Total</span>

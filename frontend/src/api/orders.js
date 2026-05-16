@@ -14,4 +14,5 @@ export const ordersAPI = {
     cancel: (id) => api.delete(`/api/orders/${id}`).then(r => r.data),
     markCookItemsReady: (id) => api.post(`/api/orders/${id}/mark-cook-items-ready`).then(r => r.data),
     ringBell: (id) => api.post(`/api/orders/${id}/ring-bell`).then(r => r.data),
+    toggleTax: (id) => api.patch(`/api/orders/${id}/toggle-tax`).then(r => r.data),
 };

@@ -539,6 +539,31 @@ class OrderController extends Controller
         return response()->json(['message' => 'Orden cancelada']);
     }
 
+    /**
+     * Aplicar/Remover IVA (16%) manualmente a la orden
+     */
+    public function toggleTax(Request $request, Order $order): JsonResponse
+    {
+        $subtotal = $order->subtotal;
+        
+        // Si ya tiene IVA, lo quitamos. Si no, aplicamos el 16%
+        if ($order->tax > 0) {
+            $tax = 0;
+        } else {
+            $tax = round($subtotal * 0.16, 2);
+        }
+
+        $order->update([
+            'tax'   => $tax,
+            'total' => $subtotal + $tax + ($order->delivery_fee ?? 0) - ($order->discount ?? 0),
+        ]);
+
+        return response()->json([
+            'message' => $tax > 0 ? 'IVA aplicado correctamente' : 'IVA removido correctamente',
+            'data'    => $order->load(['items.product', 'table', 'items.variant', 'items.extras.extra']),
+        ]);
+    }
+
     private function authorizeTenant(Request $request, int $restaurantId): void
     {
         $user = $request->user();
