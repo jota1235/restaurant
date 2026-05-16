@@ -241,7 +241,9 @@ class OrderController extends Controller
             'items.*.custom_price'       => ['sometimes', 'numeric', 'min:0'],
         ]);
 
-        DB::transaction(function () use ($request, $order) {
+        $newItems = collect();
+
+        DB::transaction(function () use ($request, $order, &$newItems) {
             foreach ($request->items as $itemData) {
                 $product = Product::findOrFail($itemData['product_id']);
                 $unitPrice = (float) $product->price;
@@ -278,6 +280,8 @@ class OrderController extends Controller
                     'promotion_type'     => $promo,
                 ]);
 
+                $newItems->push($item);
+
                 $extrasSub = 0;
                 if (!empty($itemData['extras'])) {
                     foreach ($itemData['extras'] as $extraData) {
@@ -308,6 +312,7 @@ class OrderController extends Controller
         broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
 
         // Broadcast bell to assigned cooks for the newly added items
+        $newItems->load('product.category');
         $cookIds = $newItems
             ->map(fn($item) => $item->product?->category?->assigned_cook_id)
             ->filter()
