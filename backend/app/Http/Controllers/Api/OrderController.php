@@ -167,7 +167,7 @@ class OrderController extends Controller
         }
 
         // Broadcast event
-        broadcast(new OrderCreated($order->load(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])))->toOthers();
+        $this->safeBroadcast(new OrderCreated($order->load(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])));
 
         return response()->json([
             'message' => 'Orden creada',
@@ -310,7 +310,7 @@ class OrderController extends Controller
         });
 
         // Broadcast a refresh to KDS because order changed
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+        $this->safeBroadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])));
 
         // Broadcast bell to assigned cooks for the newly added items
         $newItems->load('product.category');
@@ -322,7 +322,7 @@ class OrderController extends Controller
             ->toArray();
 
         if (!empty($cookIds)) {
-            broadcast(new CookBellRung($cookIds, $order->order_number))->toOthers();
+            $this->safeBroadcast(new CookBellRung($cookIds, $order->order_number));
         }
 
         AuditLogger::log(
@@ -354,7 +354,7 @@ class OrderController extends Controller
         $item->delete();
         $order->recalculate();
 
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+        $this->safeBroadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])));
 
         AuditLogger::log(
             'order.item_removed',
@@ -404,7 +404,7 @@ class OrderController extends Controller
         }
 
         // Broadcast event
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+        $this->safeBroadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])));
 
         // Audit Log for sensitive status changes
         if (in_array($request->status, ['paid', 'cancelled'])) {
@@ -438,7 +438,7 @@ class OrderController extends Controller
         $order->update(['delivery_fee' => $request->delivery_fee]);
         $order->recalculate();
 
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+        $this->safeBroadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])));
 
         AuditLogger::log(
             'order.delivery_fee_updated',
@@ -471,7 +471,7 @@ class OrderController extends Controller
         }
 
         // Broadcast event
-        broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+        $this->safeBroadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])));
 
         return response()->json(['message' => 'Ítem actualizado', 'item_status' => $item->status, 'order_status' => $order->fresh()->status]);
     }
@@ -499,7 +499,7 @@ class OrderController extends Controller
             if ($allReady && $order->status === Order::STATUS_CONFIRMED) {
                 $order->update(['status' => Order::STATUS_READY, 'ready_at' => now()]);
             }
-            broadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])))->toOthers();
+            $this->safeBroadcast(new OrderStatusUpdated($order->fresh(['table', 'user', 'items.product.category', 'items.variant', 'items.extras.extra'])));
         }
 
         return response()->json(['message' => 'Tus ítems fueron marcados como completados']);
@@ -510,7 +510,7 @@ class OrderController extends Controller
     {
         $this->authorizeTenant($request, $order->restaurant_id);
         
-        broadcast(new OrderBellRung($order))->toOthers();
+        $this->safeBroadcast(new OrderBellRung($order));
 
         return response()->json(['message' => 'Timbre enviado']);
     }
@@ -570,6 +570,15 @@ class OrderController extends Controller
         $user = $request->user();
         if (!$user->hasRole('superadmin') && $user->restaurant_id !== $restaurantId) {
             abort(403);
+        }
+    }
+
+    private function safeBroadcast($event): void
+    {
+        try {
+            broadcast($event)->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning("Broadcasting failed: " . $e->getMessage());
         }
     }
 }
