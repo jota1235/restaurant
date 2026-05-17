@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\CookBellRung;
+use App\Events\OrderBellRung;
+use App\Events\OrderCreated;
+use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
@@ -9,10 +13,6 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Table;
 use App\Services\AuditLogger;
-use App\Events\OrderCreated;
-use App\Events\OrderStatusUpdated;
-use App\Events\OrderBellRung;
-use App\Events\CookBellRung;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,20 +24,20 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $restaurantId = $request->get('restaurant_id');
-        $authUser     = $request->user();
-        $isCook       = $authUser->hasRole('cocina');
+        $authUser = $request->user();
+        $isCook = $authUser->hasRole('cocina');
 
         $query = Order::with([
-                'table', 'user',
-                'items.product.category',
-                'items.variant',
-                'items.extras.extra',
-            ])
+            'table', 'user',
+            'items.product.category',
+            'items.variant',
+            'items.extras.extra',
+        ])
             ->forRestaurant($restaurantId)
-            ->when($request->status,       fn($q) => $q->where('status', $request->status))
-            ->when($request->types,        fn($q) => $q->whereIn('type', explode(',', $request->types)))
-            ->when($request->table_id,     fn($q) => $q->where('table_id', $request->table_id))
-            ->when(!$request->include_closed, fn($q) => $q->active())
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->types, fn ($q) => $q->whereIn('type', explode(',', $request->types)))
+            ->when($request->table_id, fn ($q) => $q->where('table_id', $request->table_id))
+            ->when(! $request->include_closed, fn ($q) => $q->active())
             ->orderByDesc('created_at');
 
         $orders = $request->paginate ? $query->paginate(30) : $query->get();
@@ -48,11 +48,13 @@ class OrderController extends Controller
             $orders = $orders->map(function ($order) use ($cookId) {
                 $order->setRelation('items', $order->items->filter(function ($item) use ($cookId) {
                     $assignedCookId = $item->product?->category?->assigned_cook_id;
+
                     // Only show items whose category is explicitly assigned to THIS cook
                     return $assignedCookId !== null && $assignedCookId === $cookId;
                 })->values());
+
                 return $order;
-            })->filter(fn($order) => $order->items->isNotEmpty())->values();
+            })->filter(fn ($order) => $order->items->isNotEmpty())->values();
         }
 
         return response()->json([
@@ -66,37 +68,37 @@ class OrderController extends Controller
         $restaurantId = $request->get('restaurant_id');
 
         $request->validate([
-            'table_id'         => ['nullable', 'exists:tables,id'],
-            'customer_id'      => ['nullable', 'exists:customers,id'],
-            'type'             => ['sometimes', Rule::in(['dine_in', 'takeaway', 'delivery'])],
-            'customer_name'    => ['nullable', 'string', 'max:100'],
+            'table_id' => ['nullable', 'exists:tables,id'],
+            'customer_id' => ['nullable', 'exists:customers,id'],
+            'type' => ['sometimes', Rule::in(['dine_in', 'takeaway', 'delivery'])],
+            'customer_name' => ['nullable', 'string', 'max:100'],
             'delivery_address' => ['nullable', 'string', 'max:255'],
-            'notes'            => ['nullable', 'string'],
-            'items'         => ['required', 'array', 'min:1'],
-            'items.*.product_id'        => ['required', 'exists:products,id'],
+            'notes' => ['nullable', 'string'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.product_variant_id' => ['nullable', 'exists:product_variants,id'],
-            'items.*.quantity'           => ['required', 'integer', 'min:1'],
-            'items.*.promotion_type'     => ['nullable', Rule::in(['2x1', '3x2'])],
-            'items.*.notes'              => ['nullable', 'string'],
-            'items.*.extras'             => ['sometimes', 'array'],
-            'items.*.extras.*.extra_id'  => ['required', 'exists:extras,id'],
-            'items.*.extras.*.quantity'  => ['sometimes', 'integer', 'min:1'],
-            'items.*.custom_price'       => ['sometimes', 'numeric', 'min:0'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.promotion_type' => ['nullable', Rule::in(['2x1', '3x2'])],
+            'items.*.notes' => ['nullable', 'string'],
+            'items.*.extras' => ['sometimes', 'array'],
+            'items.*.extras.*.extra_id' => ['required', 'exists:extras,id'],
+            'items.*.extras.*.quantity' => ['sometimes', 'integer', 'min:1'],
+            'items.*.custom_price' => ['sometimes', 'numeric', 'min:0'],
         ]);
 
         $order = DB::transaction(function () use ($request, $restaurantId) {
             $order = Order::create([
-                'restaurant_id'    => $restaurantId,
-                'table_id'         => $request->table_id,
-                'user_id'          => $request->user()->id,
-                'customer_id'      => $request->customer_id,
-                'order_number'     => Order::nextOrderNumber($restaurantId),
-                'type'             => $request->type ?? 'dine_in',
-                'customer_name'    => $request->customer_name,
+                'restaurant_id' => $restaurantId,
+                'table_id' => $request->table_id,
+                'user_id' => $request->user()->id,
+                'customer_id' => $request->customer_id,
+                'order_number' => Order::nextOrderNumber($restaurantId),
+                'type' => $request->type ?? 'dine_in',
+                'customer_name' => $request->customer_name,
                 'delivery_address' => $request->delivery_address,
-                'notes'            => $request->notes,
-                'status'           => Order::STATUS_CONFIRMED,
-                'confirmed_at'     => now(),
+                'notes' => $request->notes,
+                'status' => Order::STATUS_CONFIRMED,
+                'confirmed_at' => now(),
             ]);
 
             foreach ($request->items as $itemData) {
@@ -105,7 +107,7 @@ class OrderController extends Controller
 
                 // Add variant price modifier
                 // Add variant price modifier or use open price
-                if (!empty($itemData['product_variant_id'])) {
+                if (! empty($itemData['product_variant_id'])) {
                     $variant = $product->variants()->find($itemData['product_variant_id']);
                     if ($variant) {
                         if ($variant->is_open_price && isset($itemData['custom_price'])) {
@@ -116,40 +118,43 @@ class OrderController extends Controller
                     }
                 }
 
-                $qty     = $itemData['quantity'];
-                $promo   = $itemData['promotion_type'] ?? null;
-                
+                $qty = $itemData['quantity'];
+                $promo = $itemData['promotion_type'] ?? null;
+
                 $billedQty = $qty;
-                if ($promo === '2x1') $billedQty = (int) ceil($qty / 2);
-                elseif ($promo === '3x2') $billedQty = (int) ceil($qty * 2 / 3);
+                if ($promo === '2x1') {
+                    $billedQty = (int) ceil($qty / 2);
+                } elseif ($promo === '3x2') {
+                    $billedQty = (int) ceil($qty * 2 / 3);
+                }
 
                 $itemSub = round($unitPrice * $billedQty, 2);
 
                 $item = OrderItem::create([
-                    'order_id'           => $order->id,
-                    'product_id'         => $itemData['product_id'],
+                    'order_id' => $order->id,
+                    'product_id' => $itemData['product_id'],
                     'product_variant_id' => $itemData['product_variant_id'] ?? null,
-                    'quantity'           => $qty,
-                    'unit_price'         => $unitPrice,
-                    'subtotal'           => $itemSub,
-                    'notes'              => $itemData['notes'] ?? null,
-                    'status'             => 'pending',
-                    'promotion_type'     => $promo,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
+                    'subtotal' => $itemSub,
+                    'notes' => $itemData['notes'] ?? null,
+                    'status' => 'pending',
+                    'promotion_type' => $promo,
                 ]);
 
                 // Extras
                 $extrasSub = 0;
-                if (!empty($itemData['extras'])) {
+                if (! empty($itemData['extras'])) {
                     foreach ($itemData['extras'] as $extraData) {
-                        $extra    = \App\Models\Extra::findOrFail($extraData['extra_id']);
-                        $eQty     = $extraData['quantity'] ?? 1;
-                        $eSub     = round((float) $extra->price * $eQty, 2);
+                        $extra = \App\Models\Extra::findOrFail($extraData['extra_id']);
+                        $eQty = $extraData['quantity'] ?? 1;
+                        $eSub = round((float) $extra->price * $eQty, 2);
                         $extrasSub += $eSub;
                         $item->extras()->create([
-                            'extra_id'   => $extra->id,
-                            'quantity'   => $eQty,
+                            'extra_id' => $extra->id,
+                            'quantity' => $eQty,
                             'unit_price' => (float) $extra->price,
-                            'subtotal'   => $eSub,
+                            'subtotal' => $eSub,
                         ]);
                     }
                     // Add extras cost to item subtotal
@@ -158,6 +163,7 @@ class OrderController extends Controller
             }
 
             $order->recalculate();
+
             return $order;
         });
 
@@ -171,9 +177,10 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Orden creada',
-            'data'    => new OrderResource($order->load(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])),
+            'data' => new OrderResource($order->load(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])),
         ], 201);
     }
+
     public function printTicket(Request $request, Order $order): JsonResponse
     {
         $this->authorizeTenant($request, $order->restaurant_id);
@@ -185,25 +192,25 @@ class OrderController extends Controller
             'is_pre_cuenta' => true,
             'folio' => $order->order_number, // We use order number since there is no payment folio yet
             'restaurant' => [
-                'name'      => $restaurant->name,
-                'address'   => $restaurant->address,
-                'phone'     => $restaurant->phone,
-                'whatsapp'  => $restaurant->whatsapp,
-                'city'      => $restaurant->city,
-                'logo'      => $restaurant->logo, 
+                'name' => $restaurant->name,
+                'address' => $restaurant->address,
+                'phone' => $restaurant->phone,
+                'whatsapp' => $restaurant->whatsapp,
+                'city' => $restaurant->city,
+                'logo' => $restaurant->logo,
             ],
             'cashier' => $order->user->name ?? 'Sistema',
-            'date'    => now()->format('d/m/Y'),
-            'time'    => now()->format('H:i:s'),
-            'order_type'       => $order->type,
-            'customer_name'    => $order->customer_name,
+            'date' => now()->format('d/m/Y'),
+            'time' => now()->format('H:i:s'),
+            'order_type' => $order->type,
+            'customer_name' => $order->customer_name,
             'delivery_address' => $order->delivery_address,
-            'order_number'     => $order->order_number,
-            'table'            => $order->getRelation('table')?->name,
-            'items' => $order->items->map(fn($item) => [
+            'order_number' => $order->order_number,
+            'table' => $order->getRelation('table')?->name,
+            'items' => $order->items->map(fn ($item) => [
                 'name' => $item->product->name,
                 'variant' => $item->variant?->name,
-                'extras' => $item->extras->map(fn($e) => $e->extra->name)->all(),
+                'extras' => $item->extras->map(fn ($e) => $e->extra->name)->all(),
                 'quantity' => $item->quantity,
                 'unit_price' => (float) $item->unit_price,
                 'subtotal' => (float) $item->subtotal,
@@ -230,26 +237,26 @@ class OrderController extends Controller
         }
 
         $request->validate([
-            'items'         => ['required', 'array', 'min:1'],
-            'items.*.product_id'        => ['required', 'exists:products,id'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.product_variant_id' => ['nullable', 'exists:product_variants,id'],
-            'items.*.quantity'           => ['required', 'integer', 'min:1'],
-            'items.*.promotion_type'     => ['nullable', Rule::in(['2x1', '3x2'])],
-            'items.*.notes'              => ['nullable', 'string'],
-            'items.*.extras'             => ['sometimes', 'array'],
-            'items.*.extras.*.extra_id'  => ['required', 'exists:extras,id'],
-            'items.*.extras.*.quantity'  => ['sometimes', 'integer', 'min:1'],
-            'items.*.custom_price'       => ['sometimes', 'numeric', 'min:0'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.promotion_type' => ['nullable', Rule::in(['2x1', '3x2'])],
+            'items.*.notes' => ['nullable', 'string'],
+            'items.*.extras' => ['sometimes', 'array'],
+            'items.*.extras.*.extra_id' => ['required', 'exists:extras,id'],
+            'items.*.extras.*.quantity' => ['sometimes', 'integer', 'min:1'],
+            'items.*.custom_price' => ['sometimes', 'numeric', 'min:0'],
         ]);
 
-        $newItems = collect();
+        $newItems = new \Illuminate\Database\Eloquent\Collection;
 
         DB::transaction(function () use ($request, $order, &$newItems) {
             foreach ($request->items as $itemData) {
                 $product = Product::findOrFail($itemData['product_id']);
                 $unitPrice = (float) $product->price;
 
-                if (!empty($itemData['product_variant_id'])) {
+                if (! empty($itemData['product_variant_id'])) {
                     $variant = $product->variants()->find($itemData['product_variant_id']);
                     if ($variant) {
                         if ($variant->is_open_price && isset($itemData['custom_price'])) {
@@ -260,41 +267,44 @@ class OrderController extends Controller
                     }
                 }
 
-                $qty     = $itemData['quantity'];
-                $promo   = $itemData['promotion_type'] ?? null;
-                
+                $qty = $itemData['quantity'];
+                $promo = $itemData['promotion_type'] ?? null;
+
                 $billedQty = $qty;
-                if ($promo === '2x1') $billedQty = (int) ceil($qty / 2);
-                elseif ($promo === '3x2') $billedQty = (int) ceil($qty * 2 / 3);
+                if ($promo === '2x1') {
+                    $billedQty = (int) ceil($qty / 2);
+                } elseif ($promo === '3x2') {
+                    $billedQty = (int) ceil($qty * 2 / 3);
+                }
 
                 $itemSub = round($unitPrice * $billedQty, 2);
 
                 $item = OrderItem::create([
-                    'order_id'           => $order->id,
-                    'product_id'         => $itemData['product_id'],
+                    'order_id' => $order->id,
+                    'product_id' => $itemData['product_id'],
                     'product_variant_id' => $itemData['product_variant_id'] ?? null,
-                    'quantity'           => $qty,
-                    'unit_price'         => $unitPrice,
-                    'subtotal'           => $itemSub,
-                    'notes'              => $itemData['notes'] ?? null,
-                    'status'             => 'pending',
-                    'promotion_type'     => $promo,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
+                    'subtotal' => $itemSub,
+                    'notes' => $itemData['notes'] ?? null,
+                    'status' => 'pending',
+                    'promotion_type' => $promo,
                 ]);
 
                 $newItems->push($item);
 
                 $extrasSub = 0;
-                if (!empty($itemData['extras'])) {
+                if (! empty($itemData['extras'])) {
                     foreach ($itemData['extras'] as $extraData) {
-                        $extra    = \App\Models\Extra::findOrFail($extraData['extra_id']);
-                        $eQty     = $extraData['quantity'] ?? 1;
-                        $eSub     = round((float) $extra->price * $eQty, 2);
+                        $extra = \App\Models\Extra::findOrFail($extraData['extra_id']);
+                        $eQty = $extraData['quantity'] ?? 1;
+                        $eSub = round((float) $extra->price * $eQty, 2);
                         $extrasSub += $eSub;
                         $item->extras()->create([
-                            'extra_id'   => $extra->id,
-                            'quantity'   => $eQty,
+                            'extra_id' => $extra->id,
+                            'quantity' => $eQty,
                             'unit_price' => (float) $extra->price,
-                            'subtotal'   => $eSub,
+                            'subtotal' => $eSub,
                         ]);
                     }
                     $item->update(['subtotal' => $itemSub + $extrasSub]);
@@ -315,13 +325,13 @@ class OrderController extends Controller
         // Broadcast bell to assigned cooks for the newly added items
         $newItems->load('product.category');
         $cookIds = $newItems
-            ->map(fn($item) => $item->product?->category?->assigned_cook_id)
+            ->map(fn ($item) => $item->product?->category?->assigned_cook_id)
             ->filter()
             ->unique()
             ->values()
             ->toArray();
 
-        if (!empty($cookIds)) {
+        if (! empty($cookIds)) {
             $this->safeBroadcast(new CookBellRung($cookIds, $order->order_number));
         }
 
@@ -334,7 +344,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Items agregados a la orden',
-            'data'    => new OrderResource($order->fresh(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])),
+            'data' => new OrderResource($order->fresh(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])),
         ]);
     }
 
@@ -347,7 +357,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Item no pertenece a la orden'], 422);
         }
 
-        if (!in_array($item->status, ['pending', 'preparing'])) {
+        if (! in_array($item->status, ['pending', 'preparing'])) {
             return response()->json(['message' => 'Solo se pueden eliminar productos pendientes o en preparación (si ya están listos, contacte a gerencia)'], 422);
         }
 
@@ -370,6 +380,7 @@ class OrderController extends Controller
     public function show(Request $request, Order $order): JsonResponse
     {
         $this->authorizeTenant($request, $order->restaurant_id);
+
         return response()->json([
             'data' => new OrderResource($order->load(['table', 'user', 'items.product', 'items.variant', 'items.extras.extra'])),
         ]);
@@ -387,9 +398,9 @@ class OrderController extends Controller
         $timestamps = [];
         match ($request->status) {
             'confirmed' => $timestamps['confirmed_at'] = now(),
-            'ready'     => $timestamps['ready_at']     = now(),
-            'paid'      => $timestamps['paid_at']      = now(),
-            default     => null,
+            'ready' => $timestamps['ready_at'] = now(),
+            'paid' => $timestamps['paid_at'] = now(),
+            default => null,
         };
 
         $order->update(array_merge(['status' => $request->status], $timestamps));
@@ -418,7 +429,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Estado actualizado',
-            'data'    => new OrderResource($order->fresh(['table', 'items.product'])),
+            'data' => new OrderResource($order->fresh(['table', 'items.product'])),
         ]);
     }
 
@@ -449,7 +460,7 @@ class OrderController extends Controller
 
         return response()->json([
             'message' => 'Costo de envío actualizado',
-            'data'    => new OrderResource($order->fresh(['table', 'items.product', 'items.variant', 'items.extras.extra'])),
+            'data' => new OrderResource($order->fresh(['table', 'items.product', 'items.variant', 'items.extras.extra'])),
         ]);
     }
 
@@ -484,7 +495,7 @@ class OrderController extends Controller
 
         // Find items that belong to this cook and are not ready
         $items = $order->items()->whereNotIn('status', ['ready', 'delivered'])->get();
-        
+
         $updated = false;
         foreach ($items as $item) {
             $assignedCookId = $item->product?->category?->assigned_cook_id;
@@ -509,7 +520,7 @@ class OrderController extends Controller
     public function ringBell(Request $request, Order $order): JsonResponse
     {
         $this->authorizeTenant($request, $order->restaurant_id);
-        
+
         $this->safeBroadcast(new OrderBellRung($order));
 
         return response()->json(['message' => 'Timbre enviado']);
@@ -525,7 +536,7 @@ class OrderController extends Controller
         }
 
         $order->update(['status' => Order::STATUS_CANCELLED]);
-        
+
         AuditLogger::log(
             'order.cancelled',
             "Orden #{$order->order_number} cancelada por el usuario",
@@ -546,7 +557,7 @@ class OrderController extends Controller
     public function toggleTax(Request $request, Order $order): JsonResponse
     {
         $subtotal = $order->subtotal;
-        
+
         // Si ya tiene IVA, lo quitamos. Si no, aplicamos el 16%
         if ($order->tax > 0) {
             $tax = 0;
@@ -555,20 +566,20 @@ class OrderController extends Controller
         }
 
         $order->update([
-            'tax'   => $tax,
+            'tax' => $tax,
             'total' => $subtotal + $tax + ($order->delivery_fee ?? 0) - ($order->discount ?? 0),
         ]);
 
         return response()->json([
             'message' => $tax > 0 ? 'IVA aplicado correctamente' : 'IVA removido correctamente',
-            'data'    => $order->load(['items.product', 'table', 'items.variant', 'items.extras.extra']),
+            'data' => $order->load(['items.product', 'table', 'items.variant', 'items.extras.extra']),
         ]);
     }
 
     private function authorizeTenant(Request $request, int $restaurantId): void
     {
         $user = $request->user();
-        if (!$user->hasRole('superadmin') && $user->restaurant_id !== $restaurantId) {
+        if (! $user->hasRole('superadmin') && $user->restaurant_id !== $restaurantId) {
             abort(403);
         }
     }
@@ -578,7 +589,7 @@ class OrderController extends Controller
         try {
             broadcast($event)->toOthers();
         } catch (\Throwable $e) {
-            \Log::warning("Broadcasting failed: " . $e->getMessage());
+            \Log::warning('Broadcasting failed: '.$e->getMessage());
         }
     }
 }
